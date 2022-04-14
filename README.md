@@ -11,7 +11,7 @@ Combining with several error mitigation techniques, we finally achieve fidelity 
 
 ## Methods
 
-Please refer to our [report]()
+Please refer to our [report](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf)
 
 ## Directory Structure
 
