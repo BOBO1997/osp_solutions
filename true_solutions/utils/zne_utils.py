@@ -9,8 +9,16 @@ from qiskit.ignis.mitigation import expectation_value
 
 
 # Pauli Twirling
-def pauli_twirling(circ) -> QuantumCircuit:
-    #! qasm ベタ書き
+def pauli_twirling(circ: QuantumCircuit) -> QuantumCircuit:
+    """
+    [internal function]
+    
+    This function takes a quantum circuit and return a new quantum circuit with Pauli Twirling around the CNOT gates.
+    Args:
+        circ: QuantumCircuit
+    Returns:
+        QuantumCircuit
+    """
     def apply_pauli(num: int, qb: int) -> str:
         if (num == 0):
             return f''
@@ -26,9 +34,9 @@ def pauli_twirling(circ) -> QuantumCircuit:
     paulis_map = [(0, 1), (3, 2), (3, 3), (1, 1), (1, 0), (2, 3), (2, 2), (2, 1), (2, 0), (1, 3), (1, 2), (3, 0), (3, 1), (0, 2), (0, 3)]
 
     new_circ = ''
-    ops = circ.qasm().splitlines(True) #! 生のqasmコードを持ってきてる: オペレータに分解
+    ops = circ.qasm().splitlines(True) #! split the quantum circuit into qasm operators
     for op in ops:
-        if (op[:2] == 'cx'): # can add for cz, etc.
+        if (op[:2] == 'cx'): # add Pauli Twirling around the CNOT gate
             num = random.randrange(len(paulis))
             qbs = re.findall('q\[(.)\]', op)
             new_circ += apply_pauli(paulis[num][0], qbs[0])
@@ -43,8 +51,13 @@ def pauli_twirling(circ) -> QuantumCircuit:
 
 def zne_wrapper(qcs, scale_factors = [1.0, 2.0, 3.0], pt = False):
     """
-    outputs the circuit list for zero noise extrapolation
-    WITHOUT Pauli twirling
+    This function outputs the circuit list for zero-noise extrapolation.
+    Args:
+        qcs: List[QuantumCircuit], the input quantum circuits.
+        scale_factors: List[float], to what extent the noise scales are investigated.
+        pt: bool, whether add Pauli Twirling or not.
+    Returns:
+        folded_qcs: List[QuantumCircuit]
     """
     folded_qcs = [] #! ZNE用の回路
     for qc in qcs:
@@ -56,6 +69,17 @@ def zne_wrapper(qcs, scale_factors = [1.0, 2.0, 3.0], pt = False):
 
 
 def make_stf_basis(n, basis_elements = ["X","Y","Z"]):
+    """
+    [internal function]
+    
+    This function outputs all the combinations of length n string for given basis_elements.
+    When basis_elements is X, Y, and Z (default), the output becomes the n-qubit Pauli basis.
+    Args:
+        n: int
+        basis_elements: List[str]
+    Returns:
+        basis: List[str]
+    """
     if n == 1:
         return basis_elements
     basis = []
@@ -66,6 +90,16 @@ def make_stf_basis(n, basis_elements = ["X","Y","Z"]):
 
 
 def reduce_hist(hist, poses):
+    """
+    [internal function]
+    
+    This function returns the reduced histogram to the designated positions.
+    Args:
+        hist: Dict[str, float]
+        poses: List[int]
+    Returns:
+        ret_hist: Dict[str, float]
+    """
     n = len(poses)
     ret_hist = {format(i, "0" + str(n) + "b"): 0 for i in range(1 << n)}
     for k, v in hist.items():
@@ -77,6 +111,16 @@ def reduce_hist(hist, poses):
 
 
 def make_stf_expvals(n, stf_hists):
+    """
+    [internal function]
+    
+    This function create the expectations under expanded basis, which are used to reconstruct the density matrix.
+    Args:
+        n: int, the size of classical register in the measurement results.
+        stf_hists: List[Dict[str, float]], the input State Tomography Fitter histograms.
+    Returns:
+        st_expvals: List[float], the output State Tomography expectation values.
+    """
     assert len(stf_hists) == 3 ** n
     stf_basis = make_stf_basis(n, basis_elements=["X","Y","Z"])
     st_basis = make_stf_basis(n, basis_elements=["I","X","Y","Z"])
@@ -109,7 +153,16 @@ def make_stf_expvals(n, stf_hists):
 
 
 def zne_decoder(n, result, scale_factors=[1.0, 2.0, 3.0], fac_type="lin"):
-    
+    """
+    This function applies the zero-noise extrapolation to the measured results and output the mitigated zero-noise expectation values.
+    Args:
+        n: int, the size of classical register in the measurement results.
+        result: Result, the returned results from job.
+        scale_factors: List[float], this should be the same as the zne_wrapper.
+        fac_type: str, "lin" or "exp", whether to use LinFactory option or ExpFactory option in mitiq, to extrapolate the expectation values.
+    Returns:
+        zne_expvals: List[float], the mitigated zero-noise expectation values.
+    """
     hists = result.get_counts()
     num_scale_factors = len(scale_factors)
     assert len(hists) % num_scale_factors == 0

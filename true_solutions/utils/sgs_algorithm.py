@@ -53,14 +53,15 @@ class priority_queue(object):
         else:
             return None 
 
-def sgs_algorithm(x, make_sum_to_one = False):
+def sgs_algorithm(x):
     """
-    The negative cancellation algorithm by Smolin, Gambetta, and Smith.
+    The negative cancellation algorithm by Smolin, Gambetta, and Smith, 2012, PRL.
+    This function is based on the figure 2 in their paper.
     O(NlogN) time, O(N) memory to the size of x: N
     Arguments
-        x: sum 1 probability vecotor with negative values
+        x: dict, sum 1 probability vecotor with negative values
     Returns
-        x_tilde: physically correct probability vector
+        x_tilde: dict, physically correct probability vector / eigenvalues
     """
 
     # compute the number and the sum of negative values

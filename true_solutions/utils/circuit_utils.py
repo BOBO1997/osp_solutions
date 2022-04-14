@@ -20,6 +20,11 @@ def trotter_gate(dt, to_instruction = True):
     return qc.to_instruction(label="Trotter") if to_instruction else qc
 
 
+def trotterize(qc, trot_gate, num_steps, targets) -> None:
+    for _ in range(num_steps):
+        qc.append(trot_gate, qargs = targets)
+
+
 def make_initial_state(qc, initial_state) -> None:
     """
     The initial_state is the string in little endian.
@@ -93,8 +98,3 @@ def subspace_decoder_init110(qc, targets) -> None:
     """
     n = qc.num_qubits
     qc.x(targets[0])
-    
-    
-def trotterize(qc, trot_gate, num_steps, targets) -> None:
-    for _ in range(num_steps):
-        qc.append(trot_gate, qargs = targets)
