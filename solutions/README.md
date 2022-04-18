@@ -12,20 +12,23 @@ Similarly, the directory named `e2d1_*` uses the option of encoder optimization 
 
 Finally, the directory named `e2d2_*` uses the option of encoder optimization level 2 and decoder optimization level 2, which means the shallow encoding and decoding method for $|110\rangle$ described in the [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
 
+## How to run the programs
+
+Note that we are using [Mitiq](https://github.com/unitaryfund/mitiq) package for zero-noise extrapolation (ZNE).
+Please install Mitiq by `pip install mitiq` before running the codes.
+
+For each jupyter notebook, you can directly run all the cells from the first.
+
+You can also check the previous results by changing the `filename` variable to the name of existing `job_ids_ibmq_jakarta_*.pkl` file.
+Note that in this case, you do not have to run the cells for `execution` function and you can also skip the process to generate `*.pkl` files.
+
 Please first use `e2d2_qrem_zne/100step_jakarta.ipynb` to re-execute the solution.
 This will output the result with high fidelity over 0.98.
 
 If you want to see the behavior without QREM, please run the file `e2d2_qrem/100step_jakarta.ipynb`.
 This will also output the result with high fidelity over 0.98.
 
-Then if you want to use the initial state other than $|110\rangle$, then please refer to the directories whose names start from `e0d0`.
-
-## How to run the programs
-
-For each jupyter notebook, you can directly run all the cells from the first.
-
-You can also check the previous results by changing the `filename` variable to the name of existing `job_ids_ibmq_jakarta_*.pkl` file.
-Note that in this case, you do not have to run the cells for `execution` function and you can also skip the process to generate `*.pkl` files.
+If you want to use the initial state other than $|110\rangle$, then please refer to the directories whose names start from `e0d0`.
 
 
 ##  Directory Structure
