@@ -1,12 +1,31 @@
 # Solutions
 
-Before checking the solutions in this directory, please read the `../report.pdf` for the introduction of the proposed methods and the execution method.
+Before checking the solutions in this directory, please read the [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf) for the details of the proposed method and the execution method.
 
 ## Settings
 
-As we wrote in the `report.pdf`, we 
+As we wrote in the [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf), we use different encoding and decoding methods, and different quantum error mitigation levels.
 
-Please first use `e2d2_qrem_zne_pt/100step_jakarta.ipynb` to re-execute the solution.
+Here, the directory named `e0d0_*` uses the option of encoder optimization level 0 and decoder optimization level 0, which means the general encoding and decoding method described in the [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
+
+Similarly, the directory named `e2d1_*` uses the option of encoder optimization level 2 and decoder optimization level 1, which means the shallow encoding method for $|110\rangle$ and specific decoding method described in the [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
+
+Finally, the directory named `e2d2_*` uses the option of encoder optimization level 2 and decoder optimization level 2, which means the shallow encoding and decoding method for $|110\rangle$ described in the [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
+
+Please first use `e2d2_qrem_zne/100step_jakarta.ipynb` to re-execute the solution.
+This will output the result with high fidelity over 0.98.
+
+If you want to see the behavior without QREM, please run the file `e2d2_qrem/100step_jakarta.ipynb`.
+This will also output the result with high fidelity over 0.98.
+
+Then if you want to use the initial state other than $|110\rangle$, then please refer to the directories whose names start from `e0d0`.
+
+## How to run the programs
+
+For each jupyter notebook, you can directly run all the cells from the first.
+
+You can also check the previous results by changing the `filename` variable to the name of existing `job_ids_ibmq_jakarta_*.pkl` file.
+Note that in this case, you do not have to run the cells for `execution` function and you can also skip the process to generate `*.pkl` files.
 
 
 ##  Directory Structure
