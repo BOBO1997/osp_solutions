@@ -32,70 +32,96 @@ If you want to use the initial state other than $|110\rangle$, then please refer
 
 
 ##  Directory Structure
-. \
-├── README.md \
-├── e0d0_qrem \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_fake_raw.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── **100step_jakarta_raw.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_132447_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_132447_.pkl \
-│   └── properties_ibmq_jakarta_20220413_132447_.pkl \
-├── e0d0_qrem_zne \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_152244_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_152244_.pkl \
-│   └── properties_ibmq_jakarta_20220413_152244_.pkl \
-├── e0d0_qrem_zne_2 \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_180241_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_180241_.pkl \
-│   └── properties_ibmq_jakarta_20220413_180241_.pkl \
-├── e2d1_qrem \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_fake_raw.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── **100step_jakarta_raw.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_030038_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_030038_.pkl \
-│   └── properties_ibmq_jakarta_20220413_030038_.pkl \
-├── e2d1_qrem_zne \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_030253_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_030253_.pkl \
-│   └── properties_ibmq_jakarta_20220413_030253_.pkl \
-├── e2d1_qrem_zne_pt \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_030456_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_030456_.pkl \
-│   └── properties_ibmq_jakarta_20220413_030456_.pkl \
-├── e2d2_qrem \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_fake_raw.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── **100step_jakarta_raw.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_030136_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_030136_.pkl \
-│   └── properties_ibmq_jakarta_20220413_030136_.pkl \
-├── e2d2_qrem_zne \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_030626_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_030626_.pkl \
-│   └── properties_ibmq_jakarta_20220413_030626_.pkl \
-├── e2d2_qrem_zne_pt \
-│   ├── **100step_fake.ipynb** \
-│   ├── **100step_jakarta.ipynb** \
-│   ├── job_ids_ibmq_jakarta_100step_20220413_030821_.pkl \
-│   ├── jobs_ibmq_jakarta_100step_20220413_030821_.pkl \
-│   └── properties_ibmq_jakarta_20220413_030821_.pkl \
-└── utils \
-    ├── circuit_utils.py \
-    ├── sgs_algorithm.py \
-    ├── tomography_utils.py \
+```bash
+.
+├── README.md
+├── e0d0_qrem
+│   ├── 100step_fake.ipynb
+│   ├── 100step_fake_raw.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── 100step_jakarta_raw.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_132447_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_132447_.pkl
+│   └── properties_ibmq_jakarta_20220413_132447_.pkl
+├── e0d0_qrem_zne
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_152244_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_152244_.pkl
+│   └── properties_ibmq_jakarta_20220413_152244_.pkl
+├── e0d0_qrem_zne_2
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_180241_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_180241_.pkl
+│   └── properties_ibmq_jakarta_20220413_180241_.pkl
+├── e0d0_qrem_zne_pt
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220417_134139_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220417_134139_.pkl
+│   └── properties_ibmq_jakarta_20220417_134139_.pkl
+├── e2d1_qrem
+│   ├── 100step_fake.ipynb
+│   ├── 100step_fake_raw.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── 100step_jakarta_raw.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_030038_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_030038_.pkl
+│   └── properties_ibmq_jakarta_20220413_030038_.pkl
+├── e2d1_qrem_20220412
+│   ├── 15step_fake.ipynb
+│   ├── 15step_jakarta.ipynb
+│   ├── 15step_jakarta_raw.ipynb
+│   ├── job_ids_jakarta_15step_20220412_031437_.pkl
+│   ├── jobs_jakarta_15step_20220412_031437_.pkl
+│   └── properties_jakarta20220412_031437_.pkl
+├── e2d1_qrem_zne
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_030253_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_030253_.pkl
+│   └── properties_ibmq_jakarta_20220413_030253_.pkl
+├── e2d1_qrem_zne_pt
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_030456_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_030456_.pkl
+│   └── properties_ibmq_jakarta_20220413_030456_.pkl
+├── e2d2_qrem
+│   ├── 100step_fake.ipynb
+│   ├── 100step_fake_raw.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── 100step_jakarta_raw.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_030136_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_030136_.pkl
+│   └── properties_ibmq_jakarta_20220413_030136_.pkl
+├── e2d2_qrem_20220412
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── 100step_jakarta_raw.ipynb
+│   ├── circuit_utils.py
+│   ├── job_ids_jakarta_100step_20220412_171248_.pkl
+│   ├── jobs_jakarta_100step_20220412_171248_.pkl
+│   ├── properties_jakarta20220412_171248_.pkl
+│   ├── sgs_algorithm.py
+│   ├── tomography_utils.py
+│   └── zne_utils.py
+├── e2d2_qrem_zne
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_030626_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_030626_.pkl
+│   └── properties_ibmq_jakarta_20220413_030626_.pkl
+├── e2d2_qrem_zne_pt
+│   ├── 100step_fake.ipynb
+│   ├── 100step_jakarta.ipynb
+│   ├── job_ids_ibmq_jakarta_100step_20220413_030821_.pkl
+│   ├── jobs_ibmq_jakarta_100step_20220413_030821_.pkl
+│   └── properties_ibmq_jakarta_20220413_030821_.pkl
+└── utils
+    ├── circuit_utils.py
+    ├── sgs_algorithm.py
+    ├── tomography_utils.py
     └── zne_utils.py
+```
