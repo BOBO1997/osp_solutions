@@ -14,12 +14,12 @@ Please first refer to our [report.pdf](https://github.com/BOBO1997/osp_solutions
 
 ## To see the methods to output the figures in [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf)
 
-Please see the [README.md](https://github.com/BOBO1997/osp_solutions/blob/main/experiments/README.md) in the `experiments` directory.
+Please see the [README.md](https://github.com/BOBO1997/osp_solutions/blob/main/experiments/README.md) in the [experiments](https://github.com/BOBO1997/osp_solutions/tree/main/experiments) directory.
 
 ## To Re-execute the programs or to check of previous results
 
-Please see the [README.md](https://github.com/BOBO1997/osp_solutions/blob/main/solutions/README.md) in the `solutions` directory.
-The files in `solutions` are the source of the table of results from the real quantum backedn in [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
+Please see the [README.md](https://github.com/BOBO1997/osp_solutions/blob/main/solutions/README.md) in the [solutions](https://github.com/BOBO1997/osp_solutions/tree/main/solutions) directory.
+The files in [solutions](https://github.com/BOBO1997/osp_solutions/tree/main/solutions) are the source of the table of results from the real quantum backedn in [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
 
 ## Authors
 
