@@ -22,8 +22,8 @@ For each jupyter notebook, you can directly run all the cells from the first.
 You can also check the previous results by changing the `filename` variable to the name of existing `job_ids_ibmq_jakarta_*.pkl` file.
 Note that in this case, you do not have to run the cells for `execution` function and you can also skip the process to generate `*.pkl` files.
 
-Please first use `e2d2_qrem_zne/100step_jakarta.ipynb` to re-execute the solution.
-This will output the result with high fidelity over 0.98.
+**Please first use `e2d2_qrem_zne/100step_jakarta.ipynb` to re-execute the solution.
+This will output the result with high fidelity over 0.98.**
 
 If you want to see the behavior without QREM, please run the file `e2d2_qrem/100step_jakarta.ipynb`.
 This will also output the result with high fidelity over 0.98.

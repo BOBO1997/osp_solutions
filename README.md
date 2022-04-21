@@ -2,15 +2,17 @@
 
 ## Abstract
 
-We simulate the time evolution of the N = 3 Heisenberg model on ibmq_jakarta with a modified Trotterization scheme based on the circuit level approach (without pulse). 
+We simulate the time evolution of the N = 3 Heisenberg model on ibmq\_jakarta with a modified Trotterization scheme based on the circuit level approach (without pulse). 
 Focusing on the symmetry of the given Heisenberg Hamiltonian, we construct an effective Hamiltonian which acts on the smaller subspace. 
 We show the Trotterization of this effective Hamiltonian is equivalent to changing the axis of the standard Trotterization of the original Hamiltonian. 
 In the given problem setting with N = 3, this encoding framework makes it possible to drastically reduce the number of CNOT gates and the circuit depth into a constant through circuit optimization, regardless of the number of Trotter iterations. 
-Combining with several error mitigation techniques, we finally achieve fidelity 0.9928 ± 0.0013 on ibmq_jakarta real quantum device, for the given problem setting.
+Combining with several error mitigation techniques, we finally achieve fidelity 0.9928 ± 0.0013 on ibmq\_jakarta real quantum device, for the given problem setting.
 
 ## Methods
 
 Please first refer to our [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
+
+Slides are also put in this repository: [Slides](https://github.com/BOBO1997/osp_solutions/blob/main/slides.pdf).
 
 ## To see the methods to output the figures in [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf)
 
