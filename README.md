@@ -12,7 +12,7 @@ Combining with several error mitigation techniques, we finally achieve fidelity 
 
 Please first refer to our [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
 
-Slides are also put in this repository: [Slides](https://github.com/BOBO1997/osp_solutions/blob/main/slides.pdf).
+Slides are also put in this repository: [slides.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/slides.pdf).
 
 ## To see the methods to output the figures in [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf)
 
