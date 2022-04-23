@@ -51,7 +51,7 @@ In the table above, the number of Trotter steps is fixed to 100.
 
 In `e2d2_qrem_20220412`, we further scored the fidelity 0.9928 ± 0.0013 with 15 Trotter steps and only with QREM.
 
-## How to run the programs
+## How to Run (Re-execute) the Programs
 
 Note that we are using [Mitiq](https://github.com/unitaryfund/mitiq) package for zero-noise extrapolation (ZNE).
 Please install Mitiq by `pip install mitiq` before running the codes.
