@@ -18,10 +18,13 @@ Slides are also put in this repository: [slides.pdf](https://github.com/BOBO1997
 
 Please see the [README.md](https://github.com/BOBO1997/osp_solutions/blob/main/experiments/README.md) in the [experiments](https://github.com/BOBO1997/osp_solutions/tree/main/experiments) directory.
 
-## To Re-execute the programs or to check of previous results
+## To re-execute the programs or to check of previous results
 
 Please see the [README.md](https://github.com/BOBO1997/osp_solutions/blob/main/solutions/README.md) in the [solutions](https://github.com/BOBO1997/osp_solutions/tree/main/solutions) directory.
 The files in [solutions](https://github.com/BOBO1997/osp_solutions/tree/main/solutions) are the source of the table of results from the real quantum backedn in [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
+
+**In short, please first use [e2d2_qrem_zne/100step_jakarta.ipynb](https://github.com/BOBO1997/osp_solutions/blob/main/solutions/e2d2_qrem_zne/100step_jakarta.ipynb) to re-execute and evaluate our solution.
+This will output the result with high fidelity over 0.98 (we scored the fidelity 0.9929 ± 0.0015 in our experiment).**
 
 ## Authors
 
