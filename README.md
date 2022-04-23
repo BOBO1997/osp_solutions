@@ -35,6 +35,8 @@ This repository is the replication of our final submission with change logs.
 Hope you enjoy our solution!
 If you find any questions, please contact us!
 
-## Links
+## External Links
 
-- [Official GitHub repository](https://github.com/qiskit-community/open-science-prize-2021)
+- [Official Event Page](https://ibmquantumawards.bemyapp.com/#/event)
+- [Official GitHub Repository](https://github.com/qiskit-community/open-science-prize-2021)
+- [Our Submitted Project in BeMyApp](https://ibmquantumawards.bemyapp.com/#/projects/62343c10ed53a60031f47b54)
