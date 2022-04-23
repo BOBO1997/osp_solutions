@@ -12,6 +12,45 @@ Similarly, the directory named `e2d1_*` uses the option of encoder optimization 
 
 Finally, the directory named `e2d2_*` uses the option of encoder optimization level 2 and decoder optimization level 2, which means the shallow encoding and decoding method for $|110\rangle$ described in the [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf).
 
+The level of the error mitigation is also identified by the name of directory.
+- `*_qrem` directory: The results with quantum readout error mitigation (QREM)
+- `*_qrem_zne` directory: The results with QREM and zero-noise extrapolation (ZNE)
+- `*_qrem_zne_pt` directory: The results with QREM and ZNE and Pauli twirling
+
+That is, if you are looking for the results by "Shallow encoding and specific decoding with QREM and ZNE", you can see the files in `e2d1_qrem_zne` directory.
+
+Each directory contains
+- `100steps_fake.ipynb`, which runs the designated implementation setting on `fake_jakarta` simulator.
+- `100steps_jakarta.ipynb`, which runs the designated implementation setting on `ibmq_jakarta` real device.
+
+In the `*_qrem` directory, you can find the `100steps_*_raw.ipynb` files. They are just removing the QREM operation in the fidelity calculation to see the raw results without error mitigation.
+
+## Results and Corresponding Directories
+
+We made the TABLE I in [report.pdf](https://github.com/BOBO1997/osp_solutions/blob/main/report.pdf) by the source code in the following directories.
+
+Setting | Score (`fake_jakarta`) | Score (`ibmq_jakarta`) | Directory |
+--- | --- | --- | ---
+**General encoding and general decoding** |  |  | 
+without any QEM | 0.7856 ± 0.0015 | 0.8039 ± 0.0048 | `e0d0_qrem`
+with QREM | 0.8448 ± 0.0015 | 0.9032 ± 0.0054 | `e0d0_qrem`
+with QREM, ZNE | 0.9393 ± 0.0053 | 0.9866 ± 0.0017 | `e0d0_qrem_zne_2`
+with QREM, ZNE and Pauli Twirling | 0.9801 ± 0.0031 |  | `e0d0_qrem_zne_pt`
+**Shallow encoding and specific decoding** |  |  | 
+without any QEM | 0.8631 ± 0.0017 | 0.8637 ± 0.0041 | `e2d1_qrem`
+with QREM | 0.9234 ± 0.0016 | 0.9728 ± 0.0040 | `e2d1_qrem`
+with QREM, ZNE | 0.9840 ± 0.0024 | 0.9857 ± 0.0043 | `e2d1_qrem_zne`
+with QREM, ZNE and Pauli Twirling | 0.9714 ± 0.0048 | 0.9624 ± 0.0167 | `e2d1_qrem_zne_pt`
+**Shallow encoding and shallow decoding** |  |  | 
+without any QEM | 0.8863 ± 0.0012 | 0.8803 ± 0.0044 | `e2d2_qrem`
+with QREM | 0.9533 ± 0.0017 | 0.9852 ± 0.0061 | `e2d2_qrem`
+with QREM, ZNE | 0.9855 ± 0.0036 | 0.9929 ± 0.0015 | `e2d2_qrem_zne`
+with QREM, ZNE and Pauli Twirling | 0.9801 ± 0.0031 | 0.9768 ± 0.0034 | `e2d2_qrem_zne_pt`
+
+In the table above, the number of Trotter steps is fixed to 100.
+
+In `e2d2_qrem_20220412`, we further scored the fidelity 0.9928 ± 0.0013 with 15 Trotter steps and only with QREM.
+
 ## How to run the programs
 
 Note that we are using [Mitiq](https://github.com/unitaryfund/mitiq) package for zero-noise extrapolation (ZNE).
@@ -29,7 +68,6 @@ To see the behavior without QREM, please run the file [e2d2_qrem/100step_jakarta
 This will also output the result with high fidelity over 0.98.
 
 To use the initial state other than $|110\rangle$, then please refer to the directories whose names start from `e0d0`.
-
 
 ##  Directory Structure
 ```bash
