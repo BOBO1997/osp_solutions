@@ -34,22 +34,22 @@ Setting | Score (`fake_jakarta`) | Score (`ibmq_jakarta`) | Directory |
 **General encoding and general decoding** |  |  |
 without any QEM | 0.7856 ± 0.0015 | 0.8039 ± 0.0048 | `e0d0_qrem`
 with QREM | 0.8448 ± 0.0015 | 0.9032 ± 0.0054 | `e0d0_qrem`
-with QREM, ZNE | 0.9393 ± 0.0053 | 0.9866 ± 0.0017 | `e0d0_qrem_zne_2`
+with QREM, ZNE | 0.9393 ± 0.0053 | **0.9866 ± 0.0017** | `e0d0_qrem_zne_2`
 with QREM, ZNE and Pauli Twirling | 0.9801 ± 0.0031 |  | `e0d0_qrem_zne_pt`
 **Shallow encoding and specific decoding** |  |  |
 without any QEM | 0.8631 ± 0.0017 | 0.8637 ± 0.0041 | `e2d1_qrem`
 with QREM | 0.9234 ± 0.0016 | 0.9728 ± 0.0040 | `e2d1_qrem`
-with QREM, ZNE | 0.9840 ± 0.0024 | 0.9857 ± 0.0043 | `e2d1_qrem_zne`
+with QREM, ZNE | 0.9840 ± 0.0024 | **0.9857 ± 0.0043** | `e2d1_qrem_zne`
 with QREM, ZNE and Pauli Twirling | 0.9714 ± 0.0048 | 0.9624 ± 0.0167 | `e2d1_qrem_zne_pt`
 **Shallow encoding and shallow decoding** |  |  |
 without any QEM | 0.8863 ± 0.0012 | 0.8803 ± 0.0044 | `e2d2_qrem`
-with QREM | 0.9533 ± 0.0017 | 0.9852 ± 0.0061 | `e2d2_qrem`
-with QREM, ZNE | 0.9855 ± 0.0036 | 0.9929 ± 0.0015 | `e2d2_qrem_zne`
+with QREM | 0.9533 ± 0.0017 | **0.9852 ± 0.0061** | `e2d2_qrem`
+with QREM, ZNE | 0.9855 ± 0.0036 | **0.9929 ± 0.0015** | `e2d2_qrem_zne`
 with QREM, ZNE and Pauli Twirling | 0.9801 ± 0.0031 | 0.9768 ± 0.0034 | `e2d2_qrem_zne_pt`
 
 In the table above, the number of Trotter steps is fixed to 100.
 
-In `e2d2_qrem_20220412`, we further scored the fidelity 0.9928 ± 0.0013 with 15 Trotter steps and only with QREM.
+**In `e2d2_qrem_20220412`, we further scored the fidelity 0.9928 ± 0.0013 with 15 Trotter steps and only with QREM.**
 
 ## How to Run (Re-execute) the Programs
 
