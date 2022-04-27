@@ -42,4 +42,5 @@ If you find any questions, please contact us!
 
 - [Official Event Page](https://ibmquantumawards.bemyapp.com/#/event)
 - [Official GitHub Repository](https://github.com/qiskit-community/open-science-prize-2021)
-- [Our Submitted Project in BeMyApp](https://ibmquantumawards.bemyapp.com/#/projects/62343c10ed53a60031f47b54)
+- [Our Project Page on BeMyApp](https://ibmquantumawards.bemyapp.com/#/projects/62343c10ed53a60031f47b54)
+- [The Submitted Version of This Repository to BeMyApp](https://github.com/BOBO1997/osp_solutions/tree/c3017c60894cd4a3a5f2a07ce77fafeb0a70f6ec)
