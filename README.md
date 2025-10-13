@@ -31,6 +31,26 @@ This will output the result with high fidelity over 0.98 (we scored the fidelity
 - Bo Yang: PhD candidate at Graduate School of Information Science and Technology, The University of Tokyo
 - Naoki Negishi: PhD candidate at Graduate School of Arts and Sciences, The University of Tokyo
 
+## To cite this work
+
+The arXiv preprint can be found in [2505.04552](https://arxiv.org/abs/2505.04552).
+Please use the following bibtex data for the citation.
+
+```
+@misc{https://doi.org/10.48550/arxiv.2505.04552,
+  doi = {10.48550/ARXIV.2505.04552},
+  url = {https://arxiv.org/abs/2505.04552},
+  author = {Yang,  Bo and Negishi,  Naoki},
+  keywords = {Quantum Physics (quant-ph),  FOS: Physical sciences,  FOS: Physical sciences},
+  title = {Symmetry-Aware Trotterization for Simulating the Heisenberg Model on IBM Quantum Devices},
+  publisher = {arXiv},
+  year = {2025},
+  copyright = {Creative Commons Attribution 4.0 International}
+}
+```
+
+## Acknowledgement
+
 Many thanks to all the organizing staffs of for holding this event!
 We are pleased to join this [IBM Quantum Open Science Prize 2021](https://ibmquantumawards.bemyapp.com/#/event).
 We are happy to propose our efficient method to solve the simulation of time evolution on 3-qubit Heisenberg model.
@@ -38,7 +58,7 @@ This repository is the replication of our final submission with change logs.
 Hope you enjoy our solution!
 If you find any questions, please contact us!
 
-## External Links
+## External links
 
 - [Official Event Page](https://ibmquantumawards.bemyapp.com/#/event)
 - [Official GitHub Repository](https://github.com/qiskit-community/open-science-prize-2021)
