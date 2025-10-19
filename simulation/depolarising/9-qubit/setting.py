@@ -9,7 +9,7 @@ time_evolution = np.pi
 
 initial_layout = list(range(num_qubits))
 
-num_steps_list = list(range(4,300,12))
+num_steps_list = list(range(4,100,4))
 
 state_initial_str = "110100110" # "101010101" ### specify initial state, 10101, 11100
 
