@@ -11,6 +11,6 @@ initial_layout = list(range(num_qubits))
 
 num_steps_list = list(range(4,100,4))
 
-state_initial_str = "11010" ### specify initial state
+state_initial_str = "11010" ### specify initial state, 10101, 11100
 
 lmd = 1.0
