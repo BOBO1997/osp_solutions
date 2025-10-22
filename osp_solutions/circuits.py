@@ -51,77 +51,6 @@ def gate_U_aj(dt,
     return qc.to_instruction(label="Trotter") if to_instruction else qc
 
 
-def gate_U(dt, 
-           option: str = "a",
-           to_instruction: bool = True,
-          ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
-    ###! correct implementation of wrong method in PRA
-    """
-    qc = QuantumCircuit(2)
-
-    if option == "a":
-        qc.cx(0, 1)
-
-        qc.rx(- 2 * dt, 0)
-        qc.h(0)
-        qc.rz(2 * dt, 1)
-
-        qc.cx(0, 1)
-
-        qc.s(0)
-        qc.h(0)
-        qc.rz(2 * dt, 1)
-        
-        qc.cx(0, 1)
-
-        qc.rx(- np.pi / 2, 0)
-        qc.rx(np.pi / 2, 1)
-
-    elif option == "b":
-        qc.cx(1, 0)
-
-        qc.rz(2 * dt, 0)
-        qc.rx(- 2 * dt, 1)
-        qc.h(1)
-
-        qc.cx(1, 0)
-
-        qc.rz(2 * dt, 0)
-        qc.s(1)
-        qc.h(1)
-        
-        qc.cx(1, 0)
-
-        qc.rx(np.pi / 2, 0)
-        qc.rx(- np.pi / 2, 1)
-
-    elif option == "c":
-        qc.rx(np.pi / 2, 0)
-        qc.rx(- np.pi / 2, 1)
-
-        qc.cx(0, 1)
-
-        qc.h(0)
-        qc.sdg(0)
-        qc.rz(2 * dt, 1)
-        
-        qc.cx(0, 1)
-
-        qc.h(0)
-        qc.rx(- 2 * dt, 0)
-        qc.rz(2 * dt, 1)
-
-        qc.cx(0, 1)
-
-    else:
-        raise Exception
-
-    return qc.to_instruction(label="Trotter") if to_instruction else qc
-
-
 def gate_U_negishi(dt, 
                    option: str = "a",
                    to_instruction: bool = True,
@@ -131,6 +60,9 @@ def gate_U_negishi(dt,
     dt: qiskit._accelerate.circuit.Parameter
     Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
     """
+
+    ###! force removing barrier
+    add_barrier = False
 
     theta = np.pi / 2 - 2 * dt
     phi = - theta
@@ -194,59 +126,6 @@ def gate_U_negishi(dt,
     return qc.to_instruction(label="Trotter") if to_instruction else qc
 
 
-def gate_U_prime(dt, 
-                 to_instruction: bool = True,
-                ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
-    """
-    qc = QuantumCircuit(2)
-
-    qc.rx(np.pi / 2, 0)
-    qc.rx(- np.pi / 2, 1)
-
-    qc.cx(0, 1)
-
-    qc.h(0)
-    qc.sdg(0)
-    qc.rz(- 2 * dt, 1)
-
-    qc.cx(0, 1)
-
-    qc.h(0)
-    qc.rx(2 * dt, 0)
-    qc.rz(- 2 * dt, 1)
-
-    return qc.to_instruction(label="Trotter") if to_instruction else qc
-
-
-def gate_U_prime_prime(dt, 
-                       to_instruction: bool = True,
-                      ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
-    """
-    qc = QuantumCircuit(2)
-    qc.rz(- 2 * dt, 0)
-    qc.rx(2 * dt, 1)
-    qc.h(1)
-
-    qc.cx(1, 0)
-
-    qc.rz(- 2 * dt, 0)
-    qc.s(1)
-    qc.h(1)
-
-    qc.cx(1, 0)
-    
-    qc.rx(np.pi / 2, 0)
-    qc.rx(- np.pi / 2, 1)
-
-    return qc.to_instruction(label="Trotter") if to_instruction else qc
-
-
 def gate_Heff(dt, 
               to_instruction: bool = True,
               add_barrier: bool = False,
@@ -255,6 +134,9 @@ def gate_Heff(dt,
     dt: qiskit._accelerate.circuit.Parameter
     Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
     """
+    ###! force removing barrier
+    add_barrier = False
+
     qc = QuantumCircuit(2)
 
     qc.rx(2 * dt, 0)
@@ -280,18 +162,23 @@ def gate_Heff(dt,
 def gate_proposed_2t(dt,
                      lmd: float = 0.0,
                      to_instruction: bool = True,
-                     add_barrier: bool = True,
+                     add_barrier: bool = False,
                     ) -> Union[QuantumCircuit, Instruction]:
     """
     dt: qiskit._accelerate.circuit.Parameter
     """
+    ###! force adding barrier
+    add_barrier = True
+
     qc = QuantumCircuit(5)
 
     qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
-                             option="c"), 
+                             option="c",
+                             add_barrier=add_barrier), 
               qargs = [1, 2])
     qc.append(gate_U_negishi(dt=2 * dt,
-                             option="c"), 
+                             option="c",
+                             add_barrier=add_barrier), 
               qargs = [3, 4])
 
     if add_barrier:
@@ -305,8 +192,11 @@ def gate_proposed_2t(dt,
     qc.cx(2, 3)
     qc.cx(3, 1)
 
-    qc.append(gate_Heff(dt=(1 + lmd) * dt), 
-              qargs = [1, 2])
+    qc.append(gate_Heff(dt=(1 + lmd) * dt,
+                        add_barrier=add_barrier,
+                       ), 
+              qargs = [1, 2],
+             )
 
     # qc.cx(2, 1)
     # qc.cx(1, 0)
@@ -320,10 +210,12 @@ def gate_proposed_2t(dt,
         qc.barrier()
 
     qc.append(gate_U_negishi(dt=2 * dt,
-                             option="b"), 
+                             option="b",
+                             add_barrier=add_barrier), 
               qargs = [0, 1])
     qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
-                             option="b"), 
+                             option="b",
+                             add_barrier=add_barrier), 
               qargs = [2, 3])
     
     if add_barrier:
@@ -333,44 +225,6 @@ def gate_proposed_2t(dt,
 
 
 ### ================================================== ###
-
-
-def append_block_trotter(qc: QuantumCircuit, 
-                         dt,
-                         num_steps: int, 
-                         to_instruction: bool = True,
-                        ) -> None:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    conventional Suzuki-Trotter block for \Delta t
-    ###! correct implementation of wrong method in PRA
-    """
-    num_qubits = qc.num_qubits
-    
-    if not num_qubits & 1: ### even
-        for _ in range(num_steps):
-            for ith_qubit in range(num_qubits):
-                if not ith_qubit & 1: ### even
-                    qc.append(gate_U(dt=dt,
-                                     to_instruction=to_instruction), 
-                              qargs = [ith_qubit, ith_qubit + 1])
-            for ith_qubit in range(num_qubits - 1):
-                if ith_qubit & 1: ### odd
-                    qc.append(gate_U(dt=dt,
-                                     to_instruction=to_instruction), 
-                              qargs = [ith_qubit, ith_qubit + 1])
-    if num_qubits & 1: ### odd
-        for _ in range(num_steps):
-            for ith_qubit in range(num_qubits - 1):
-                if not ith_qubit & 1: ### even
-                    qc.append(gate_U(dt=dt,
-                                     to_instruction=to_instruction), 
-                              qargs = [ith_qubit, ith_qubit + 1])
-            for ith_qubit in range(num_qubits):
-                if ith_qubit & 1: ### odd
-                    qc.append(gate_U(dt=dt,
-                                     to_instruction=to_instruction), 
-                              qargs = [ith_qubit, ith_qubit + 1])
 
 
 def append_block_trotter_aj(qc: QuantumCircuit, 
@@ -415,7 +269,7 @@ def append_block_trotter_negishi(qc: QuantumCircuit,
                                  num_steps: int, 
                                  option: str = None,
                                  to_instruction: bool = True,
-                                 add_barrier: bool = True,
+                                 add_barrier: bool = False,
                                 ) -> None:
     """
     dt: qiskit._accelerate.circuit.Parameter
@@ -429,13 +283,15 @@ def append_block_trotter_negishi(qc: QuantumCircuit,
                 if not ith_qubit & 1: ### even
                     qc.append(gate_U_negishi(dt=dt,
                                              option="b" if option is None else option,
-                                             to_instruction=to_instruction), 
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier), 
                               qargs = [ith_qubit, ith_qubit + 1])
             for ith_qubit in range(num_qubits - 1):
                 if ith_qubit & 1: ### odd
                     qc.append(gate_U_negishi(dt=dt,
                                              option="c" if option is None else option,
-                                             to_instruction=to_instruction), 
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier), 
                               qargs = [ith_qubit, ith_qubit + 1])
             if add_barrier:
                 qc.barrier()
@@ -446,13 +302,15 @@ def append_block_trotter_negishi(qc: QuantumCircuit,
                 if not ith_qubit & 1: ### even
                     qc.append(gate_U_negishi(dt=dt,
                                              option="b" if option is None else option,
-                                             to_instruction=to_instruction),
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier),
                               qargs = [ith_qubit, ith_qubit + 1])
             for ith_qubit in range(num_qubits):
                 if ith_qubit & 1: ### odd
                     qc.append(gate_U_negishi(dt=dt,
                                              option="c" if option is None else option,
-                                             to_instruction=to_instruction), 
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier), 
                               qargs = [ith_qubit, ith_qubit + 1])
             if add_barrier:
                 qc.barrier()
@@ -463,6 +321,7 @@ def append_block_trotter_proposed(qc: QuantumCircuit,
                                   lmd: float,
                                   num_steps: int, 
                                   to_instruction: bool = True,
+                                  add_barrier: bool = False,
                                  ) -> None:
     """
     dt: qiskit._accelerate.circuit.Parameter
@@ -477,7 +336,8 @@ def append_block_trotter_proposed(qc: QuantumCircuit,
             if ith_qubit % 4 == 0: ### even
                 qc.append(gate_proposed_2t(dt=dt,
                                            lmd=lmd,
-                                           to_instruction=to_instruction), 
+                                           to_instruction=to_instruction,
+                                           add_barrier=add_barrier), 
                           qargs = list(range(ith_qubit, ith_qubit + 5)))
 
 
