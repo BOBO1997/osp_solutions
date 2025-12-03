@@ -18,7 +18,7 @@ from osp_solutions.patch_ignis import rename_qcs_StateTomography_to_ignis
 from osp_solutions.tomography import StateTomographyFitter
 from qiskit.quantum_info import state_fidelity
 
-from osp_solutions.circuits import append_block_trotter, append_block_trotter_proposed, append_initial_state, append_block_trotter_aj, append_block_trotter_negishi
+from osp_solutions.circuits import append_block_trotter_proposed, append_initial_state, append_block_trotter_aj, append_block_trotter_negishi
 from osp_solutions.simulator_dm import make_dm_binary, hamiltonian_to_dm, DMExtended
 from osp_solutions.hamiltonian import Hamiltonian, make_H_Heisenberg
 from osp_solutions.backend_simulator import result_to_dms
@@ -84,7 +84,7 @@ for p_dep1, p_dep2 in zip(ps_dep1, ps_dep2):
     # Add errors to noise model
     noise_model = NoiseModel()
     noise_model.add_all_qubit_quantum_error(error_dep1, ["rx", "rz", "sx", "h", "sdg", "s", "x", "u1", "u2", "u3"])
-    noise_model.add_all_qubit_quantum_error(error_dep2_global, ["cz"])
+    noise_model.add_all_qubit_quantum_error(error_dep2_global, ["cx", "cz"])
     # noise_model.add_all_qubit_quantum_error(error_3, ["cswap", "ccx"])
     print(noise_model)
     print()
