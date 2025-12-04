@@ -9,13 +9,13 @@ from qiskit.result import Counts, Result #! deprecated
 
 
 class DMExtended(qi.DensityMatrix):
-    def __init__(self, 
-                 matrix, 
+    def __init__(self,
+                 matrix,
                  dims=None,
                 ) -> None:
         super().__init__(matrix, dims=dims)
 
-    def __matmul__(self, 
+    def __matmul__(self,
                    other,
                   ) -> Any:
         if isinstance(other, qi.DensityMatrix):
@@ -23,7 +23,7 @@ class DMExtended(qi.DensityMatrix):
         else:
             return DMExtended(self._data @ other, dims=self.dims())
         
-    def __pow__(self, 
+    def __pow__(self,
                 num_power: int,
                ) -> Any:
         if num_power == 0:
@@ -43,7 +43,7 @@ class DMExtended(qi.DensityMatrix):
     def dagger(self) -> Any:
         return DMExtended(self._data.T.conjugate(), dims=self.dims())
     
-    def tensor_pow(self, 
+    def tensor_pow(self,
                    k: int,
                   ) -> Any:
         if k <= 0:
@@ -56,24 +56,31 @@ class DMExtended(qi.DensityMatrix):
     def normalize(self):
         return DMExtended(self._data / self.trace(), dims=self.dims())
     
-    def partial_trace(self, 
+    def partial_trace(self,
                       qargs: List[int],
-                      endian_dm: int = "little", ### for my own use, it's usually little endian ###
-                      endian_qargs: int = "little",
+                      endian_dm: int = "big", ### for my own use, it's usually big endian ###
+                      endian_qargs: int = "big",
                       normalize: bool = True,
                      ) -> Any:
         """
-        qubtis: the subsystem to be traced over <- indices denoted in little endian but the denisty matrix is big endian by default in qi.DensityMatrix
+        qubtis: the subsystem to be traced over <- indices denoted in big endian but the denisty matrix is little endian by default in qi.DensityMatrix
         with normalization by default
+
+        big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+        little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+        That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+        this is big endian to big endian, and little endian to little endian.
+        Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
         """
-        if endian_dm == endian_qargs: ### flip endian of qargs since qi.partial trace takes state in big endiang and qargs in little endian ###
+        if endian_dm == endian_qargs: ### flip endian of qargs since qi.partial trace takes state in little endiang and qargs in big endian ###
             qargs = [self.num_qubits - 1 - qarg for qarg in qargs]
         if normalize:
             return DMExtended(qi.partial_trace(state=self._data, qargs=qargs)).normalize()
         else:
             return DMExtended(qi.partial_trace(state=self._data, qargs=qargs))
     
-    def apply_unitary(self, 
+    def apply_unitary(self,
                       U: qi.DensityMatrix, 
                       normalize: bool = True,
                      ) -> Any:
@@ -91,15 +98,23 @@ class DMExtended(qi.DensityMatrix):
 
 def qc_to_dm(qc: QuantumCircuit,
              noise_model: Any = None,
-             flip_endian: bool = False,
+             endian_qc: str = "big",
+             endian_dm: str = "big",
             ) -> DMExtended:
     """
     Note that you have to add `qc.save_density_matrix()`.
     `result.data()["density_matrix"]` is equivalent to
     `result.results[i].data.density_matrix`
     #! deprecated library: qiskit.aer
-    - big endian by default
+    - little endian by default
     - initial state is |0>
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
     simulator = AerSimulator(method="density_matrix",
                              noise_model=noise_model) ### here, backend is not used ###
@@ -107,21 +122,28 @@ def qc_to_dm(qc: QuantumCircuit,
                         shots=0)
     result = job.result()
     dm = result.data()["density_matrix"]
-    if flip_endian:
+    if endian_qc != endian_dm:
         return DMExtended(dm.reverse_qargs())
     else:
         return DMExtended(dm)
 
 
 def str_pauli_to_dm(str_pauli: Union[str, qi.Pauli],
-                    endian_dm: str = "little",
-                    endian_pauli: str = "little",
+                    endian_dm: str = "big",
+                    endian_pauli: str = "big",
                    ) -> DMExtended:
     """
-    little endian by default
+    big endian by default
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
-    if (endian_dm[:3] == "big" and endian_pauli[:6] == "little") or \
-       (endian_dm[:6] == "little" and endian_pauli[:3] == "big"):
+    if (endian_dm[:3] == "little" and endian_pauli[:6] == "big") or \
+       (endian_dm[:6] == "big" and endian_pauli[:3] == "little"):
         str_pauli = str_pauli[::-1]
 
     ret = 1
@@ -145,14 +167,21 @@ def str_pauli_to_dm(str_pauli: Union[str, qi.Pauli],
 
 
 def str_pauli_to_dm_opr_meas(str_pauli: Union[str, qi.Pauli],
-                             endian_dm: str = "little",
-                             endian_pauli: str = "little",
+                             endian_dm: str = "big",
+                             endian_pauli: str = "big",
                             ) -> DMExtended:
     """
-    little endian by default
+    big endian by default
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
-    if (endian_dm[:3] == "big" and endian_pauli[:6] == "little") or \
-       (endian_dm[:6] == "little" and endian_pauli[:3] == "big"):
+    if (endian_dm[:3] == "little" and endian_pauli[:6] == "big") or \
+       (endian_dm[:6] == "big" and endian_pauli[:3] == "little"):
         str_pauli = str_pauli[::-1]
 
     dm_I = np.array([[1, 0], [0, 1]], dtype="complex")
@@ -177,12 +206,19 @@ def str_pauli_to_dm_opr_meas(str_pauli: Union[str, qi.Pauli],
 
 
 def hamiltonian_to_dm(hamiltonian: dict,
-                      endian_dm: str = "little",
-                      endian_hamiltonian: str = "little",
+                      endian_dm: str = "big",
+                      endian_hamiltonian: str = "big",
                      ) -> DMExtended:
     """
     endian depends on str_pauli_to_dm
-    little endian by default
+    big endian by default
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
     ret = None
     for str_pauli, coeff in hamiltonian.items():
@@ -201,17 +237,24 @@ def hamiltonian_to_dm(hamiltonian: dict,
 
 def dm_to_expval(dm: qi.DensityMatrix, 
                  str_observable: str,
-                 endian_dm: str = "little",
-                 endian_observable: str = "little",
+                 endian_dm: str = "big",
+                 endian_observable: str = "big",
                 ) -> Union[float, complex]:
     """
-    little endian by default for both dm and observable
+    big endian by default for both dm and observable
     Args:
-        dm: supposed to be in little endian
-        str_pauli: supposed to be in little endian
+        dm: supposed to be in big endian
+        str_pauli: supposed to be in big endian
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
-    if (endian_dm[:3] == "big" and endian_observable[:6] == "little") or \
-       (endian_dm[:6] == "little" and endian_observable[:3] == "big"):
+    if (endian_dm[:3] == "little" and endian_observable[:6] == "big") or \
+       (endian_dm[:6] == "big" and endian_observable[:3] == "little"):
         str_observable = str_observable[::-1]
 
     dm_observable = 1
@@ -254,17 +297,24 @@ def dm_to_expval(dm: qi.DensityMatrix,
 
 def dm_to_hist(dm: qi.DensityMatrix,
                observable: str,
-               endian_dm: str = "big",
-               endian_observable: str = "little",
-               endian_hist: str = "big",
+               endian_dm: str = "little",
+               endian_observable: str = "big",
+               endian_hist: str = "little",
               ) -> Counts:
     """
     ###! using dm_with_observable_to_hist is recommended.
     Here observables just indicate which qubits to measure.
     It takes care of only whether the char_pauli is I or not.
     Args:
-        dm: big endian (given default)
-        hist: big endian (default)
+        dm: little endian (given default)
+        hist: little endian (default)
+    
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
     flag_reverse_endian_hist = 1 if endian_hist == endian_dm else -1 ### 1 is to do nothing, -1 is to flip the list
     flag_reverse_endian_observable = 1 if endian_observable == endian_dm else -1 ### not in use, since this effect can be absorbed in dm.partial_trace(endian_qargs=...)
@@ -288,13 +338,20 @@ def dm_to_hist(dm: qi.DensityMatrix,
 
 def dms_to_hists(dms: List[qi.DensityMatrix],
                  observables: str,
-                 endian_dm: str = "big",
-                 endian_observable: str = "little",
-                 endian_hist: str = "big",
+                 endian_dm: str = "little",
+                 endian_observable: str = "big",
+                 endian_hist: str = "little",
                 ) -> List[Counts]:
     """
     Here observables just indicate which qubits to measure.
     It takes care of only whether the char_pauli is I or not.
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
     assert len(observables) == len(dms)
     hists = []
@@ -310,10 +367,18 @@ def dms_to_hists(dms: List[qi.DensityMatrix],
 
 def dm_with_observable_to_hist(dm: qi.DensityMatrix,
                                observable: str,
-                               endian_dm: str = "big",
-                               endian_observable: str = "little",
-                               endian_hist: str = "big",
+                               endian_dm: str = "little",
+                               endian_observable: str = "big",
+                               endian_hist: str = "little",
                               ) -> Counts:
+    """
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
     flag_reverse_endian_hist = 1 if endian_hist == endian_dm else -1
     flag_reverse_endian_observable = 1 if endian_observable == endian_dm else -1
     num_qubits = dm.num_qubits
@@ -340,10 +405,18 @@ def dm_with_observable_to_hist(dm: qi.DensityMatrix,
 
 def dms_with_obserbables_to_hists(dms: List[qi.DensityMatrix],
                                   observables: List[str],
-                                  endian_dm: str = "big",
-                                  endian_observable: str = "little",
-                                  endian_hist: str = "big",
+                                  endian_dm: str = "little",
+                                  endian_observable: str = "big",
+                                  endian_hist: str = "little",
                                  ) -> List[Counts]:
+    """
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
     assert len(observable) == len(dms)
     hists = []
     for dm, observable in zip(dms, observables):
@@ -357,17 +430,25 @@ def dms_with_obserbables_to_hists(dms: List[qi.DensityMatrix],
 
 
 def result_to_dms(result: Result,
-                  endian_dm: str = "big",
+                  endian_result: str = "little",
+                  endian_dm: str = "little",
                  ) -> List[DMExtended]:
     """
     Note that you have to add `qc.save_density_matrix()`.
     `result.results[i].data.density_matrix` is equivalent to
     `result.data()["density_matrix"]`
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
     dms = []
     for experimental_result in result.results:
         dm = DMExtended(experimental_result.data.density_matrix)
-        if endian_dm == "little" or endian_dm == "little_endian":
+        if endian_result != endian_dm:
             dms.append(dm.reverse_qargs())
         else:
             dms.append(dm)

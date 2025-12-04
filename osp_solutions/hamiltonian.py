@@ -197,6 +197,7 @@ def make_H_ghz(size_system: int):
             H += {observable: -1.0}
     return H
 
+
 ### set Hamiltonian used in the subspace ###
 def make_H_subspace_ghz(H: Hamiltonian,
                         num_divisions: int):
@@ -209,6 +210,7 @@ def make_H_subspace_ghz(H: Hamiltonian,
                 H_subspace += {str_pauli: coeff} ### actually the coefficient is not important ###
     # H_subspace = H ### * if we want to use the full power subspace * ###
     return H_subspace
+
 
 def make_H_fidelity_ghz(generators_stabilizers: List[Hamiltonian],
                         num_qubits: int,
@@ -225,8 +227,20 @@ def make_H_fidelity_ghz(generators_stabilizers: List[Hamiltonian],
         H_fidelity += sample_stabilizer
     return H_fidelity
 
+
 ### set Hamiltonian of 1D Ising model ###
-def make_H_Ising_1D(num_qubits: int) -> Tuple[Hamiltonian, float]:
+def make_H_Ising_1D(num_qubits: int,
+                    endian_str: str = "big",
+                   ) -> Tuple[Hamiltonian, float]:
+    """
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+    
     n_rows = 1
     n_cols = num_qubits
     num_qubits = n_rows * n_cols
@@ -239,23 +253,25 @@ def make_H_Ising_1D(num_qubits: int) -> Tuple[Hamiltonian, float]:
         G.add_edge(i, i + 1)
 
     ### set Hamiltonian ###
+    flag_reverse_endian = -1 if endian_str == "little" else 1
+
     H = Hamiltonian({})
     for i in range(num_qubits):
         observable = list("I" * num_qubits)
         observable[i] = "X"
-        observable = "".join(observable)
+        observable = "".join(observable)[::flag_reverse_endian]
         H += {observable: -h.flatten()[i]}
     for i in range(n_rows):
         for j in range(n_cols):
             if i < n_rows - 1:
                 observable = list("I" * num_qubits)
                 observable[i * n_cols + j] = observable[(i + 1) * n_cols + j] = "Z"
-                observable = "".join(observable)
+                observable = "".join(observable)[::flag_reverse_endian]
                 H += {observable: -1}
             if j < n_cols - 1:
                 observable = list("I" * num_qubits)
                 observable[i * n_cols + j] = observable[i * n_cols + j + 1] = "Z"
-                observable = "".join(observable)
+                observable = "".join(observable)[::flag_reverse_endian]
                 H += {observable: -1}
     # print("Hamiltonian:")
     # print(H)
@@ -267,19 +283,65 @@ def make_H_Ising_1D(num_qubits: int) -> Tuple[Hamiltonian, float]:
     # print("top four energies:", sorted(energies_theoretical.real)[:4])
     return H, energy_theoretical
 
-def make_H_Heisenberg(num_qubits: int) -> Hamiltonian:
+
+def make_H_Heisenberg_path(num_qubits: int,
+                           endian_str: str = "big",
+                          ) -> Hamiltonian:
+    """
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+
+    flag_reverse_endian = -1 if endian_str == "little" else 1
+
     H = Hamiltonian({})
     for ith_qubit in range(num_qubits - 1):
         observable = list("I" * num_qubits)
         observable[ith_qubit] = observable[ith_qubit + 1] = "X"
-        observable = "".join(observable)
+        observable = "".join(observable)[::flag_reverse_endian]
         H += {observable: 1}
         observable = list("I" * num_qubits)
         observable[ith_qubit] = observable[ith_qubit + 1] = "Y"
-        observable = "".join(observable)
+        observable = "".join(observable)[::flag_reverse_endian]
         H += {observable: 1}
         observable = list("I" * num_qubits)
         observable[ith_qubit] = observable[ith_qubit + 1] = "Z"
-        observable = "".join(observable)
+        observable = "".join(observable)[::flag_reverse_endian]
         H += {observable: 1}
+    return H
+
+
+def make_H_Heisenberg_ring(num_qubits: int,
+                           endian_str: str = "big",
+                          ) -> Hamiltonian:
+    """
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+
+    flag_reverse_endian = -1 if endian_str == "little" else 1
+
+    H = Hamiltonian({})
+    for ith_qubit in range(num_qubits):
+        observable = list("I" * num_qubits)
+        observable[ith_qubit] = observable[(ith_qubit + 1) % num_qubits] = "X"
+        observable = "".join(observable)[::flag_reverse_endian]
+        H += {observable: 1}
+        observable = list("I" * num_qubits)
+        observable[ith_qubit] = observable[(ith_qubit + 1) % num_qubits] = "Y"
+        observable = "".join(observable)[::flag_reverse_endian]
+        H += {observable: 1}
+        observable = list("I" * num_qubits)
+        observable[ith_qubit] = observable[(ith_qubit + 1) % num_qubits] = "Z"
+        observable = "".join(observable)[::flag_reverse_endian]
+        H += {observable: 1}
+
     return H
