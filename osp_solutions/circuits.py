@@ -48,7 +48,7 @@ def gate_U_aj(dt,
     qc.append(instruction=YY, qargs=[0,1])
     qc.append(instruction=XX, qargs=[0,1])
 
-    return qc.to_instruction(label="Trotter") if to_instruction else qc
+    return qc.to_instruction(label="U_aj") if to_instruction else qc
 
 
 def gate_U_negishi(dt, 
@@ -62,7 +62,7 @@ def gate_U_negishi(dt,
     """
 
     ###! force removing barrier
-    add_barrier = False
+    # add_barrier = False
 
     theta = np.pi / 2 - 2 * dt
     phi = - theta
@@ -123,40 +123,45 @@ def gate_U_negishi(dt,
     if add_barrier:
         qc.barrier()
 
-    return qc.to_instruction(label="Trotter") if to_instruction else qc
+    return qc.to_instruction(label="U_negishi") if to_instruction else qc
 
 
-def gate_Heff(dt, 
-              to_instruction: bool = True,
-              add_barrier: bool = False,
-             ) -> Union[QuantumCircuit, Instruction]:
+def gate_H_eff(dt,
+               to_instruction: bool = True,
+               add_barrier: bool = False,
+              ) -> Union[QuantumCircuit, Instruction]:
     """
     dt: qiskit._accelerate.circuit.Parameter
     Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
     """
     ###! force removing barrier
-    add_barrier = False
+    # add_barrier = False
 
     qc = QuantumCircuit(2)
 
-    qc.rx(2 * dt, 0)
-    qc.rz(2 * dt, 1)
-    qc.h(1)
+    qc.ry(- np.pi / 4, 0)
+    qc.ry(- np.pi / 4, 1)
+
+    qc.rz(np.sqrt(2) * dt, 0)
+    qc.rz(np.sqrt(2) * dt, 1)
 
     qc.cx(1, 0)
 
     qc.rz(- 2 * dt, 0)
-    qc.rx(- 2 * dt, 1)
-    qc.rz(2 * dt, 1)
+    qc.rx(2 * dt, 1)
 
     qc.cx(1, 0)
-    qc.h(1)
-    qc.rz(2 * dt, 0)
+
+    qc.rz(np.sqrt(2) * dt, 0)
+    qc.rz(np.sqrt(2) * dt, 1)
+
+    qc.ry(np.pi / 4, 0)
+    qc.ry(np.pi / 4, 1)
 
     if add_barrier:
         qc.barrier()
 
-    return qc.to_instruction(label="Trotter") if to_instruction else qc
+    return qc.to_instruction(label="H_eff") if to_instruction else qc
 
 
 def gate_proposed_2t(dt,
@@ -168,19 +173,35 @@ def gate_proposed_2t(dt,
     dt: qiskit._accelerate.circuit.Parameter
     """
     ###! force adding barrier
-    add_barrier = True
+    ### add_barrier = True
 
     qc = QuantumCircuit(5)
 
-    qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
-                             option="c",
-                             add_barrier=add_barrier), 
-              qargs = [1, 2])
-    qc.append(gate_U_negishi(dt=2 * dt,
-                             option="c",
-                             add_barrier=add_barrier), 
-              qargs = [3, 4])
-
+    if to_instruction:
+        # qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
+        #                          option="c",
+        #                          to_instruction=to_instruction,
+        #                          add_barrier=add_barrier), 
+        #           qargs=[1, 2])
+        qc.append(gate_U_negishi(dt=2 * dt,
+                                 option="c",
+                                 to_instruction=to_instruction,
+                                 add_barrier=add_barrier), 
+                  qargs=[3, 4])
+    else:
+        # qc.compose(gate_U_negishi(dt=(1 - lmd) * dt,
+        #                           option="c",
+        #                           to_instruction=to_instruction,
+        #                           add_barrier=add_barrier), 
+        #            qubits=[1, 2],
+        #            inplace=True,)
+        qc.compose(gate_U_negishi(dt=2 * dt,
+                                  option="c",
+                                  to_instruction=to_instruction,
+                                  add_barrier=add_barrier), 
+                   qubits=[3, 4],
+                   inplace=True,)
+        
     if add_barrier:
         qc.barrier()
 
@@ -192,11 +213,24 @@ def gate_proposed_2t(dt,
     qc.cx(2, 3)
     qc.cx(3, 1)
 
-    qc.append(gate_Heff(dt=(1 + lmd) * dt,
-                        add_barrier=add_barrier,
-                       ), 
-              qargs = [1, 2],
-             )
+    if add_barrier:
+        qc.barrier()
+
+    if to_instruction:
+        qc.append(gate_H_eff(dt=(1 + lmd) * dt,
+                            to_instruction=to_instruction,
+                            add_barrier=add_barrier,
+                        ), 
+                qargs=[1, 2],
+                )
+    else:
+        qc.compose(gate_H_eff(dt=(1 + lmd) * dt,
+                             to_instruction=to_instruction,
+                             add_barrier=add_barrier,
+                            ), 
+                   qubits=[1, 2],
+                   inplace=True,
+                  )
 
     # qc.cx(2, 1)
     # qc.cx(1, 0)
@@ -209,19 +243,35 @@ def gate_proposed_2t(dt,
     if add_barrier:
         qc.barrier()
 
-    qc.append(gate_U_negishi(dt=2 * dt,
-                             option="b",
-                             add_barrier=add_barrier), 
-              qargs = [0, 1])
-    qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
-                             option="b",
-                             add_barrier=add_barrier), 
-              qargs = [2, 3])
-    
+    if to_instruction:
+        qc.append(gate_U_negishi(dt=2 * dt,
+                                option="b",
+                                to_instruction=to_instruction,
+                                add_barrier=add_barrier), 
+                  qargs=[0, 1])
+        # qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
+        #                         option="b",
+        #                         to_instruction=to_instruction,
+        #                         add_barrier=add_barrier), 
+        #           qargs=[2, 3])
+    else:
+        qc.compose(gate_U_negishi(dt=2 * dt,
+                                  option="b",
+                                  to_instruction=to_instruction,
+                                  add_barrier=add_barrier), 
+                   qubits=[0, 1],
+                   inplace=True,)
+        # qc.compose(gate_U_negishi(dt=(1 - lmd) * dt,
+        #                           option="b",
+        #                           to_instruction=to_instruction,
+        #                           add_barrier=add_barrier),
+        #            qubits=[2, 3],
+        #            inplace=True,)
+        
     if add_barrier:
         qc.barrier()
 
-    return qc.to_instruction(label="Trotter") if to_instruction else qc
+    return qc.to_instruction(label="proposed_2t") if to_instruction else qc
 
 
 ### ================================================== ###
@@ -334,11 +384,19 @@ def append_block_trotter_proposed(qc: QuantumCircuit,
     for _ in range(num_steps // 2):
         for ith_qubit in range(num_qubits - 2):
             if ith_qubit % 4 == 0: ### even
-                qc.append(gate_proposed_2t(dt=dt,
-                                           lmd=lmd,
-                                           to_instruction=to_instruction,
-                                           add_barrier=add_barrier), 
-                          qargs = list(range(ith_qubit, ith_qubit + 5)))
+                if to_instruction:
+                    qc.append(gate_proposed_2t(dt=dt,
+                                            lmd=lmd,
+                                            to_instruction=to_instruction,
+                                            add_barrier=add_barrier), 
+                              qargs=list(range(ith_qubit, ith_qubit + 5)))
+                else:
+                    qc.compose(gate_proposed_2t(dt=dt,
+                                            lmd=lmd,
+                                            to_instruction=to_instruction,
+                                            add_barrier=add_barrier),
+                               qubits=list(range(ith_qubit, ith_qubit + 5)),
+                               inplace=True,)
 
 
 def trotterize(qc, 
@@ -358,6 +416,7 @@ def trotterize(qc,
 
 def append_initial_state(qc: QuantumCircuit, 
                          state_initial_str: str,
+                         add_barrier: bool = False,
                         ) -> None:
     """
     The state_initial_str is the string in little endian.
@@ -365,6 +424,9 @@ def append_initial_state(qc: QuantumCircuit,
     for i, state in enumerate(state_initial_str):
         if state == "1":
             qc.x(i)
+    
+    if add_barrier:
+        qc.barrier()
 
 
 def general_subspace_encoder(qc, targets) -> None:
