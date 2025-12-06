@@ -3,63 +3,86 @@ import numpy as np
 from qiskit.circuit import QuantumCircuit, Instruction, Parameter # , QuantumRegister
 
 
-def gate_U_aj(dt, 
-           option: str = "b",
-           to_instruction: bool = True,
-          ) -> Union[QuantumCircuit, Instruction]:
+def gate_block_trotter_qiskit(dt: float, 
+                              to_instruction: bool = True,
+                              add_barrier: bool = False,
+                             ) -> Union[QuantumCircuit, Instruction]:
     """
+    dt: qiskit._accelerate.circuit.Parameter
+    Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
+    """
+
+    qc = QuantumCircuit(2,
+                        name="block_trotter_qiskit")
+    qc.rzz(theta=2 * dt,
+           qubit1=0,
+           qubit2=1)
+    qc.ryy(theta=2 * dt,
+           qubit1=0,
+           qubit2=1)
+    qc.rxx(theta=2 * dt,
+           qubit1=0,
+           qubit2=1)
+
+    if add_barrier:
+        qc.barrier(label="block_trotter_qiskit")
+
+    return qc.to_instruction(label="block_trotter_qiskit") if to_instruction else qc
+
+
+def gate_block_trotter_6cnot(dt: float, 
+                             to_instruction: bool = True,
+                             add_barrier: bool = False,
+                            ) -> Union[QuantumCircuit, Instruction]:
+    """
+    ### ! NOT RECOMMENDED ! ### use gate_block_trotter_qiskit instead.
     dt: qiskit._accelerate.circuit.Parameter
     Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
     based on https://github.com/qiskit-community/open-science-prize-2021
     """
+    
     # Build a subcircuit for XX(t) two-qubit gate
-    XX_qc = QuantumCircuit(2, name='XX')
-    #
-    XX_qc.ry(np.pi/2,[0,1])
-    XX_qc.cx(0,1)
-    XX_qc.rz(2 * dt, 1)
-    XX_qc.cx(0,1)
-    XX_qc.ry(-np.pi/2,[0,1])
-    # Convert custom quantum circuit into a gate
-    XX = XX_qc.to_instruction()
+    qc_XX = QuantumCircuit(2, name='XX')
+    qc_XX.ry(np.pi/2,[0,1])
+    qc_XX.cx(0,1)
+    qc_XX.rz(2 * dt, 1)
+    qc_XX.cx(0,1)
+    qc_XX.ry(-np.pi/2,[0,1])
 
     # Build a subcircuit for YY(t) two-qubit gate
-    YY_qc = QuantumCircuit(2, name='YY')
-    #
-    YY_qc.rx(np.pi/2,[0,1])
-    YY_qc.cx(0,1)
-    YY_qc.rz(2 * dt, 1)
-    YY_qc.cx(0,1)
-    YY_qc.rx(-np.pi/2,[0,1])
-    # Convert custom quantum circuit into a gate
-    YY = YY_qc.to_instruction()
+    qc_YY = QuantumCircuit(2, name='YY')
+    qc_YY.rx(np.pi/2,[0,1])
+    qc_YY.cx(0,1)
+    qc_YY.rz(2 * dt, 1)
+    qc_YY.cx(0,1)
+    qc_YY.rx(-np.pi/2,[0,1])
 
     # Build a subcircuit for ZZ(t) two-qubit gate
-    ZZ_qc = QuantumCircuit(2, name='ZZ')
-    #
-    ZZ_qc.cx(0,1)
-    ZZ_qc.rz(2 * dt, 1)
-    ZZ_qc.cx(0,1)
-    # Convert custom quantum circuit into a gate
-    ZZ = ZZ_qc.to_instruction()
+    qc_ZZ = QuantumCircuit(2, name='ZZ')
+    qc_ZZ.cx(0,1)
+    qc_ZZ.rz(2 * dt, 1)
+    qc_ZZ.cx(0,1)
 
-    qc = QuantumCircuit(2)
-    qc.append(instruction=ZZ, qargs=[0,1])
-    qc.append(instruction=YY, qargs=[0,1])
-    qc.append(instruction=XX, qargs=[0,1])
+    qc = QuantumCircuit(2,
+                        name="block_trotter_6cnot")
+    qc.append(instruction=qc_ZZ.to_instruction(), qargs=[0,1])
+    qc.append(instruction=qc_YY.to_instruction(), qargs=[0,1])
+    qc.append(instruction=qc_XX.to_instruction(), qargs=[0,1])
 
-    return qc.to_instruction(label="U_aj") if to_instruction else qc
+    if add_barrier:
+        qc.barrier(label="block_trotter_6cnot")
+
+    return qc.to_instruction(label="block_trotter_6cnot") if to_instruction else qc
 
 
-def gate_U_negishi(dt, 
-                   option: str = "b",
-                   to_instruction: bool = True,
-                   add_barrier: bool = False,
-                  ) -> Union[QuantumCircuit, Instruction]:
+def gate_block_trotter_3cnot(dt: float,
+                             option: str = "b",
+                             to_instruction: bool = True,
+                             add_barrier: bool = False,
+                            ) -> Union[QuantumCircuit, Instruction]:
     """
     dt: qiskit._accelerate.circuit.Parameter
     Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
-    big endian: following the QuantumCircuit instance which adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
     """
 
     theta = np.pi / 2 - 2 * dt
@@ -68,7 +91,8 @@ def gate_U_negishi(dt,
     theta_negative_t = np.pi / 2 + 2 * dt
     phi_negative_t = - theta_negative_t
     
-    qc = QuantumCircuit(2)
+    qc = QuantumCircuit(2,
+                        name="block_trotter_3cnot")
 
     if option == "a":
         qc.cx(1, 0)
@@ -134,9 +158,9 @@ def gate_U_negishi(dt,
         raise Exception
     
     if add_barrier:
-        qc.barrier()
+        qc.barrier(label="block_trotter_3cnot")
 
-    return qc.to_instruction(label="U_negishi") if to_instruction else qc
+    return qc.to_instruction(label="block_trotter_3cnot") if to_instruction else qc
 
 
 def gate_H_eff_old(dt,
@@ -227,37 +251,22 @@ def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
     qc = QuantumCircuit(5)
 
     if to_instruction:
-        # qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
-        #                          option="d",
-        #                          to_instruction=to_instruction,
-        #                          add_barrier=add_barrier),
-        #           qargs=[1, 2])
-        qc.append(gate_U_negishi(dt=dt * 2, ###!
-                                 option="a", # "d",
-                                 to_instruction=to_instruction,
-                                 add_barrier=add_barrier),
+        qc.append(gate_block_trotter_3cnot(dt=dt * 2, ###!
+                                           option="a", # "d",
+                                           to_instruction=to_instruction,
+                                           add_barrier=add_barrier),
                   qargs=[3, 4])
     else:
-        # qc.compose(gate_U_negishi(dt=(1 - lmd) * dt,
-        #                           option="d",
-        #                           to_instruction=to_instruction,
-        #                           add_barrier=add_barrier),
-        #            qubits=[1, 2],
-        #            inplace=True,)
-        qc.compose(gate_U_negishi(dt=dt * 2, ###!
-                                  option="a", # "d",
-                                  to_instruction=to_instruction,
-                                  add_barrier=add_barrier), 
+        qc.compose(gate_block_trotter_3cnot(dt=dt * 2, ###!
+                                            option="a", # "d",
+                                            to_instruction=to_instruction,
+                                            add_barrier=add_barrier), 
                    qubits=[3, 4],
                    inplace=True,)
         
     if add_barrier:
         qc.barrier()
 
-    # qc.cx(3, 2)
-    # qc.cx(2, 1)
-    # qc.cx(3, 4)
-    # qc.cx(2, 3)
     qc.cx(1, 2)
     qc.cx(2, 3)
     qc.cx(3, 1)
@@ -281,10 +290,6 @@ def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
                    inplace=True,
                   )
 
-    # qc.cx(2, 1)
-    # qc.cx(1, 0)
-    # qc.cx(2, 3)
-    # qc.cx(1, 2)
     qc.cx(3, 1)
     qc.cx(2, 3)
     qc.cx(1, 2)
@@ -293,29 +298,18 @@ def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
         qc.barrier()
 
     if to_instruction:
-        qc.append(gate_U_negishi(dt=dt * 2, ###!
-                                option="a", # "c",
-                                to_instruction=to_instruction,
-                                add_barrier=add_barrier), 
+        qc.append(gate_block_trotter_3cnot(dt=dt * 2, ###!
+                                           option="a", # "c",
+                                           to_instruction=to_instruction,
+                                           add_barrier=add_barrier), 
                   qargs=[0, 1])
-        # qc.append(gate_U_negishi(dt=(1 - lmd) * dt,
-        #                         option="c",
-        #                         to_instruction=to_instruction,
-        #                         add_barrier=add_barrier), 
-        #           qargs=[2, 3])
     else:
-        qc.compose(gate_U_negishi(dt=dt * 2, ### !
-                                  option="a", # "c",
-                                  to_instruction=to_instruction,
-                                  add_barrier=add_barrier), 
+        qc.compose(gate_block_trotter_3cnot(dt=dt * 2, ### !
+                                            option="a", # "c",
+                                            to_instruction=to_instruction,
+                                            add_barrier=add_barrier), 
                    qubits=[0, 1],
                    inplace=True,)
-        # qc.compose(gate_U_negishi(dt=(1 - lmd) * dt,
-        #                           option="c",
-        #                           to_instruction=to_instruction,
-        #                           add_barrier=add_barrier),
-        #            qubits=[2, 3],
-        #            inplace=True,)
         
     if add_barrier:
         qc.barrier()
@@ -326,51 +320,55 @@ def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
 ### ================================================== ###
 
 
-def append_block_trotter_aj(qc: QuantumCircuit, 
-                            dt,
-                            num_steps: int, 
-                            to_instruction: bool = True,
-                           ) -> None:
+###! unused
+def append_path_qiskit(qc: QuantumCircuit, 
+                       dt,
+                       num_steps: int, 
+                       to_instruction: bool = True,
+                      ) -> None:
     """
+    ###! unused
     dt: qiskit._accelerate.circuit.Parameter
     conventional Suzuki-Trotter block for \Delta t
     """
     num_qubits = qc.num_qubits
     
-    if not num_qubits & 1: ### even
+    if not (num_qubits & 1): ### even
         for _ in range(num_steps):
             for ith_qubit in range(num_qubits):
                 if not ith_qubit & 1: ### even
-                    qc.append(gate_U_aj(dt=dt,
+                    qc.append(gate_block_trotter_qiskit(dt=dt,
                                         to_instruction=to_instruction), 
                               qargs = [ith_qubit, ith_qubit + 1])
             for ith_qubit in range(num_qubits - 1):
                 if ith_qubit & 1: ### odd
-                    qc.append(gate_U_aj(dt=dt,
+                    qc.append(gate_block_trotter_qiskit(dt=dt,
                                         to_instruction=to_instruction), 
                               qargs = [ith_qubit, ith_qubit + 1])
     if num_qubits & 1: ### odd
         for _ in range(num_steps):
             for ith_qubit in range(num_qubits - 1):
                 if not ith_qubit & 1: ### even
-                    qc.append(gate_U_aj(dt=dt,
+                    qc.append(gate_block_trotter_qiskit(dt=dt,
                                         to_instruction=to_instruction),
                               qargs = [ith_qubit, ith_qubit + 1])
             for ith_qubit in range(num_qubits):
                 if ith_qubit & 1: ### odd
-                    qc.append(gate_U_aj(dt=dt,
+                    qc.append(gate_block_trotter_qiskit(dt=dt,
                                         to_instruction=to_instruction), 
                               qargs = [ith_qubit, ith_qubit + 1])
-                    
 
-def append_block_trotter_negishi(qc: QuantumCircuit, 
-                                 dt,
-                                 num_steps: int, 
-                                 option: str = None,
-                                 to_instruction: bool = True,
-                                 add_barrier: bool = False,
-                                ) -> None:
+
+###! old -> added gate_path_qiskit
+def append_path_qiskit(qc: QuantumCircuit, 
+                             dt,
+                             num_steps: int, 
+                             option: str = None,
+                             to_instruction: bool = True,
+                             add_barrier: bool = False,
+                            ) -> None:
     """
+    ###! old -> added gate_path_qiskit
     dt: qiskit._accelerate.circuit.Parameter
     conventional Suzuki-Trotter block for \Delta t
     """
@@ -380,14 +378,14 @@ def append_block_trotter_negishi(qc: QuantumCircuit,
         for _ in range(num_steps):
             for ith_qubit in range(num_qubits):
                 if not ith_qubit & 1: ### even
-                    qc.append(gate_U_negishi(dt=dt,
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
                                              option="a", # "c" if option is None else option,
                                              to_instruction=to_instruction,
                                              add_barrier=add_barrier), 
                               qargs = [ith_qubit, ith_qubit + 1])
             for ith_qubit in range(num_qubits - 1):
                 if ith_qubit & 1: ### odd
-                    qc.append(gate_U_negishi(dt=dt,
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
                                              option="a", # "d" if option is None else option,
                                              to_instruction=to_instruction,
                                              add_barrier=add_barrier), 
@@ -399,14 +397,14 @@ def append_block_trotter_negishi(qc: QuantumCircuit,
         for _ in range(num_steps):
             for ith_qubit in range(num_qubits - 1):
                 if not ith_qubit & 1: ### even
-                    qc.append(gate_U_negishi(dt=dt,
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
                                              option="a", # "c" if option is None else option,
                                              to_instruction=to_instruction,
                                              add_barrier=add_barrier),
                               qargs = [ith_qubit, ith_qubit + 1])
             for ith_qubit in range(num_qubits):
                 if ith_qubit & 1: ### odd
-                    qc.append(gate_U_negishi(dt=dt,
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
                                              option="a", # "d" if option is None else option,
                                              to_instruction=to_instruction,
                                              add_barrier=add_barrier), 
@@ -415,14 +413,71 @@ def append_block_trotter_negishi(qc: QuantumCircuit,
                 qc.barrier()
 
 
-def append_block_trotter_proposed(qc: QuantumCircuit, 
-                                  dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
-                                  num_steps: int, ###! note that this is based on the counting of the original Trotter iteration
-                                  type_H_eff: str = None,
-                                  to_instruction: bool = True,
-                                  add_barrier: bool = False,
-                                 ) -> None:
+def gate_path_qiskit(num_qubits: int,
+                           num_steps: int,
+                           dt: float,
+                           option: str = None,
+                           to_instruction: bool = True,
+                           add_barrier: bool = False,
+                          ) -> Union[QuantumCircuit, Instruction]:
     """
+    dt: qiskit._accelerate.circuit.Parameter
+    conventional Suzuki-Trotter block for \Delta t
+    """
+    qc = QuantumCircuit(num_qubits,
+                        name="path_qiskit")
+    
+    if not (num_qubits & 1): ### even
+        for ith_step in range(num_steps):
+            for ith_qubit in range(num_qubits):
+                if not ith_qubit & 1: ### even
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
+                                             option="a", # "c" if option is None else option,
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier), 
+                              qargs = [ith_qubit, ith_qubit + 1])
+            for ith_qubit in range(num_qubits - 1):
+                if ith_qubit & 1: ### odd
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
+                                             option="a", # "d" if option is None else option,
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier), 
+                              qargs = [ith_qubit, ith_qubit + 1])
+            if add_barrier:
+                qc.barrier(label=str(ith_step+1)+"-th iteration")
+
+    if num_qubits & 1: ### odd
+        for ith_step in range(num_steps):
+            for ith_qubit in range(num_qubits - 1):
+                if not ith_qubit & 1: ### even
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
+                                             option="a", # "c" if option is None else option,
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier),
+                              qargs = [ith_qubit, ith_qubit + 1])
+            for ith_qubit in range(num_qubits):
+                if ith_qubit & 1: ### odd
+                    qc.append(gate_block_trotter_3cnot(dt=dt,
+                                             option="a", # "d" if option is None else option,
+                                             to_instruction=to_instruction,
+                                             add_barrier=add_barrier), 
+                              qargs = [ith_qubit, ith_qubit + 1])
+            if add_barrier:
+                qc.barrier(label=str(ith_step+1)+"-th iteration")
+
+    return qc.to_instruction(label="path_qiskit") if to_instruction else qc
+
+
+###! old -> added gate_path_proposed
+def append_path_proposed(qc: QuantumCircuit, 
+                         dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
+                         num_steps: int, ###! note that this is based on the counting of the original Trotter iteration
+                         type_H_eff: str = None,
+                         to_instruction: bool = True,
+                         add_barrier: bool = False,
+                        ) -> None:
+    """
+    ###! old -> added gate_path_proposed
     dt: qiskit._accelerate.circuit.Parameter
     Proposed Trotter block for 2\Delta t
     """
@@ -448,17 +503,54 @@ def append_block_trotter_proposed(qc: QuantumCircuit,
                                inplace=True,)
 
 
-### ================================================== ###
-###! from here: unused !###
-### ================================================== ###
+def gate_path_proposed(num_qubits: int,
+                       num_steps: int, ###! note that this is based on the counting of the original Trotter iteration
+                       dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
+                       type_H_eff: str = None,
+                       to_instruction: bool = True,
+                       add_barrier: bool = False,
+                      ) -> Union[QuantumCircuit, Instruction]:
+    """
+    dt: qiskit._accelerate.circuit.Parameter
+    Proposed Trotter block for 2\Delta t
+    """
+    assert not (num_steps & 1)
+    assert (num_qubits - 1) % 4 == 0
+
+    qc = QuantumCircuit(num_qubits,
+                        name="path_proposed")
+
+    for ith_step in range(num_steps // 2): ###! halved here: since gate_proposed_2t merges two original Trotter iterations
+        for ith_qubit in range(num_qubits - 2):
+            if ith_qubit % 4 == 0: ### even
+                if to_instruction:
+                    qc.append(gate_proposed_2t(dt=dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
+                                               type_H_eff=type_H_eff,
+                                               to_instruction=to_instruction,
+                                               add_barrier=add_barrier), 
+                              qargs=list(range(ith_qubit, ith_qubit + 5)))
+                else:
+                    qc.compose(gate_proposed_2t(dt=dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
+                                                type_H_eff=type_H_eff,
+                                                to_instruction=to_instruction,
+                                                add_barrier=add_barrier),
+                               qubits=list(range(ith_qubit, ith_qubit + 5)),
+                               inplace=True,)
+        
+        if add_barrier:
+            qc.barrier(label=str(ith_step+1)+"-th iteration")
+
+    return qc.to_instruction(label="path_proposed") if to_instruction else qc
 
 
+###! old -> added gate_initial_state
 def append_initial_state(qc: QuantumCircuit, 
                          state_initial: str,
                          endian_state_initial: str = "big",
                          add_barrier: bool = False,
                         ) -> None:
     """
+    ###! old -> added gate_initial_state
     The state_initial is the string in big endian.
     """
     if endian_state_initial == "little":
@@ -500,6 +592,11 @@ def gate_initial_state(state_initial: str,
         qc.barrier(label=state_initial)
 
     return qc.to_instruction(label=state_initial) if to_instruction else qc
+
+
+###! ================================================== ###
+###! from here: unused !###
+###! ================================================== ###
 
 
 def general_subspace_encoder(qc, targets) -> None:
