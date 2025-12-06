@@ -14,8 +14,6 @@ num_steps_list = list(range(4,100,4))
 # state_initial = "11010" ### specify initial state
 state_initial = "10101"
 
-lmd = 1.0
-
 type_H_eff = "old"
 
 ### ====== noise model ====== ###
