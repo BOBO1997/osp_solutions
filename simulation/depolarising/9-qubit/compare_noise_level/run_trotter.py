@@ -18,7 +18,7 @@ from osp_solutions.patch_ignis import rename_qcs_StateTomography_to_ignis
 from osp_solutions.tomography import StateTomographyFitter
 from qiskit.quantum_info import state_fidelity
 
-from osp_solutions.circuits import append_block_trotter_proposed, append_initial_state, append_block_trotter_aj, append_block_trotter_negishi
+from osp_solutions.circuits_util import append_block_trotter_proposed, append_initial_state, append_block_trotter_aj, append_block_trotter_negishi
 from osp_solutions.simulator_dm import make_dm_binary, hamiltonian_to_dm, DMExtended
 from osp_solutions.hamiltonian import Hamiltonian, make_H_Heisenberg
 from osp_solutions.backend_simulator import result_to_dms

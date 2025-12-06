@@ -1,7 +1,9 @@
 from typing import *
 import numpy as np
-from qiskit.circuit import QuantumCircuit, Instruction, Parameter # , QuantumRegister
+from qiskit.circuit import QuantumCircuit, Instruction, Parameter
 
+
+### ================================================== ###
 
 def gate_block_trotter_qiskit(dt: float, 
                               to_instruction: bool = True,
@@ -163,6 +165,206 @@ def gate_block_trotter_3cnot(dt: float,
     return qc.to_instruction(label="block_trotter_3cnot") if to_instruction else qc
 
 
+### ================================================== ###
+
+
+def gate_U_enc(connectivity: str = "complete",
+               to_instruction: bool = True,
+               add_barrier: bool = False,
+              ) -> Union[QuantumCircuit, Instruction]:
+    """
+    ### for blue and red
+    big endian: following the QuantumCircuit instance which adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+    qc = QuantumCircuit(3)
+
+    if connectivity == "complete":
+        qc.cx(0, 1)
+        qc.cx(1, 2)
+        qc.cx(2, 0)
+    elif connectivity == "path":
+        qc.cx(0, 1)
+        qc.cx(2, 1)
+        qc.cx(1, 0)
+        qc.cx(2, 1)
+        qc.cx(1, 2)
+    else:
+        raise Exception("invalid connectivity")
+
+    if add_barrier:
+        qc.barrier(label="U_enc")
+
+    return qc.to_instruction(label="U_enc") if to_instruction else qc
+
+
+def gate_U_dec(connectivity: str = "complete",
+               to_instruction: bool = True,
+               add_barrier: bool = False,
+              ) -> Union[QuantumCircuit, Instruction]:
+    """
+    ### for blue and red
+    big endian: following the QuantumCircuit instance which adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+    qc = QuantumCircuit(3)
+
+    if connectivity == "complete":
+        qc.cx(2, 0)
+        qc.cx(1, 2)
+        qc.cx(0, 1)
+    elif connectivity == "path":
+        qc.cx(1, 2)
+        qc.cx(2, 1)
+        qc.cx(1, 0)
+        qc.cx(2, 1)
+        qc.cx(0, 1)
+    else:
+        raise Exception("invalid connectivity")
+    
+    if add_barrier:
+        qc.barrier(label="U_dec")
+
+    return qc.to_instruction(label="U_dec") if to_instruction else qc
+
+
+def gate_U_enc_H(connectivity: str = "complete",
+                 to_instruction: bool = True,
+                 add_barrier: bool = False,
+                ) -> Union[QuantumCircuit, Instruction]:
+    """
+    ### for yellow and green
+    big endian: following the QuantumCircuit instance which adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+    qc = QuantumCircuit(3)
+
+    if connectivity == "complete":
+        qc.cx(1, 0)
+        qc.cx(2, 1)
+        qc.cx(0, 2)
+    elif connectivity == "path":
+        qc.cx(1, 0)
+        qc.cx(1, 2)
+        qc.cx(0, 1)
+        qc.cx(1, 2)
+        qc.cx(2, 1)
+    else:
+        raise Exception("invalid connectivity")
+
+    if add_barrier:
+        qc.barrier(label="U_enc_H")
+
+    return qc.to_instruction(label="U_enc_H") if to_instruction else qc
+
+
+def gate_U_dec_H(connectivity: str = "complete",
+                 to_instruction: bool = True,
+                 add_barrier: bool = False,
+                ) -> Union[QuantumCircuit, Instruction]:
+    """
+    ### for yellow and green
+    big endian: following the QuantumCircuit instance which adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+    qc = QuantumCircuit(3)
+
+    if connectivity == "complete":
+        qc.cx(0, 2)
+        qc.cx(2, 1)
+        qc.cx(1, 0)
+    elif connectivity == "path":
+        qc.cx(2, 1)
+        qc.cx(1, 2)
+        qc.cx(0, 1)
+        qc.cx(1, 2)
+        qc.cx(1, 0)
+    else:
+        raise Exception("invalid connectivity")
+    
+    if add_barrier:
+        qc.barrier(label="U_dec_H")
+
+    return qc.to_instruction(label="U_dec_H") if to_instruction else qc
+
+
+### ================================================== ###
+
+
+def gate_2xx_zz(dt: float,
+                to_instruction: bool = True,
+                add_barrier: bool = False,
+               ) -> Union[QuantumCircuit, Instruction]:
+    """
+    exp(-i(2XX+ZZ)dt), used in the proposed method
+    """
+    qc = QuantumCircuit(2)
+    qc.cx(0, 1)
+    qc.rx(4 * dt, 0)
+    qc.rz(2 * dt, 1)
+    qc.cx(0, 1)
+
+    ###! force not to add barrier
+    # if add_barrier:
+    #     qc.barrier()
+
+    return qc.to_instruction(label="2xx_zz") if to_instruction else qc
+
+
+def gate_H_eff(dt: float,
+               to_instruction: bool = True,
+               add_barrier: bool = False,
+              ) -> Union[QuantumCircuit, Instruction]:
+    """
+    dt: qiskit._accelerate.circuit.Parameter
+    Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
+    """
+
+    qc = QuantumCircuit(2)
+
+    ### V_enc
+    qc.ry(- 1 * np.pi / 4, 0) ###! cos(\pi/8) + i sin (\pi/8 Y)
+    qc.ry(- 1 * np.pi / 4, 1) ###! cos(\pi/8) + i sin (\pi/8 Y)
+    
+    ### further trotter, exp(-i (Z_1 + Z_2) t / sqrt(2))
+    qc.rz(np.sqrt(2) * dt, 0) ### exp(-i Z_1 t / sqrt(2))
+    qc.rz(np.sqrt(2) * dt, 1) ### exp(-i Z_2 t / sqrt(2))
+
+    qc.sxdg(0) ### sqrt(X)^{dag}
+    qc.sxdg(1) ### sqrt(X)^{dag}
+
+    ###! force not to add barrier
+    # if add_barrier:
+    #     qc.barrier()
+    
+    if to_instruction:
+        qc.append(gate_2xx_zz(dt=dt,
+                              to_instruction=to_instruction,
+                              add_barrier=add_barrier),
+                  qargs=[0, 1])
+    else:
+        qc.compose(gate_2xx_zz(dt=dt,
+                               to_instruction=to_instruction,
+                               add_barrier=add_barrier),
+                   qubits=[0, 1],
+                   inplace=True,)
+    
+    qc.sx(0) ### sqrt(X)
+    qc.sx(1) ### sqrt(X)
+
+    ### further trotter, exp(-i (Z_1 + Z_2) t / sqrt(2))
+    qc.rz(np.sqrt(2) * dt, 0) ### exp(-i Z_1 t / sqrt(2))
+    qc.rz(np.sqrt(2) * dt, 1) ### exp(-i Z_2 t / sqrt(2))
+    
+    ### V_dnc = V_enc^{dag}
+    qc.ry(1 * np.pi / 4, 0) ###! cos(\pi/8) - i sin (\pi/8 Y)
+    qc.ry(1 * np.pi / 4, 1) ###! cos(\pi/8) - i sin (\pi/8 Y)
+
+    if add_barrier:
+        qc.barrier(label="H_eff")
+
+    return qc.to_instruction(label="H_eff") if to_instruction else qc
+
+
+### ================================================== ###
+
+
 def gate_H_eff_old(dt,
                    to_instruction: bool = True,
                    add_barrier: bool = False,
@@ -251,13 +453,13 @@ def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
     qc = QuantumCircuit(5)
 
     if to_instruction:
-        qc.append(gate_block_trotter_3cnot(dt=dt * 2, ###!
+        qc.append(gate_block_trotter_3cnot(dt=dt, #! * 2, ###!
                                            option="a", # "d",
                                            to_instruction=to_instruction,
                                            add_barrier=add_barrier),
                   qargs=[3, 4])
     else:
-        qc.compose(gate_block_trotter_3cnot(dt=dt * 2, ###!
+        qc.compose(gate_block_trotter_3cnot(dt=dt, #! * 2, ###!
                                             option="a", # "d",
                                             to_instruction=to_instruction,
                                             add_barrier=add_barrier), 
@@ -298,13 +500,13 @@ def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
         qc.barrier()
 
     if to_instruction:
-        qc.append(gate_block_trotter_3cnot(dt=dt * 2, ###!
+        qc.append(gate_block_trotter_3cnot(dt=dt, #! * 2, ###!
                                            option="a", # "c",
                                            to_instruction=to_instruction,
                                            add_barrier=add_barrier), 
                   qargs=[0, 1])
     else:
-        qc.compose(gate_block_trotter_3cnot(dt=dt * 2, ### !
+        qc.compose(gate_block_trotter_3cnot(dt=dt, #! * 2, ### !
                                             option="a", # "c",
                                             to_instruction=to_instruction,
                                             add_barrier=add_barrier), 
@@ -316,142 +518,3 @@ def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
 
     return qc.to_instruction(label="proposed_2t") if to_instruction else qc
 
-
-### ================================================== ###
-
-
-def gate_path_conventional(num_qubits: int, 
-                           num_steps: int, 
-                           dt: float,
-                           type_block: str = "3cnot",
-                           to_instruction: bool = True,
-                           add_barrier: bool = False,
-                          ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    conventional Suzuki-Trotter iterations for path structure
-    """
-
-    ### choose the type of Trotter block
-    if type_block == "qiskit":
-        gate_block_trotter = gate_block_trotter_qiskit
-    elif type_block == "6cnot":
-        gate_block_trotter = gate_block_trotter_6cnot
-    elif type_block == "3cnot":
-        gate_block_trotter = gate_block_trotter_3cnot
-    else:
-        raise Exception("specify a valid type for the Trotter block")
-    
-    qc = QuantumCircuit(num_qubits,
-                        name="path_conventional")
-    
-    for ith_step in range(num_steps):
-    
-        if not num_qubits & 1: ### even
-            for _ in range(num_steps):
-                for ith_qubit in range(num_qubits):
-                    if not (ith_qubit & 1): ### even
-                        qc.append(gate_block_trotter(dt=dt,
-                                                    to_instruction=to_instruction,
-                                                    add_barrier=add_barrier), 
-                                qargs = [ith_qubit, ith_qubit + 1])
-                for ith_qubit in range(num_qubits - 1):
-                    if ith_qubit & 1: ### odd
-                        qc.append(gate_block_trotter(dt=dt,
-                                                    to_instruction=to_instruction,
-                                                    add_barrier=add_barrier), 
-                                qargs = [ith_qubit, ith_qubit + 1])
-                # if add_barrier:
-                #     qc.barrier([ith_qubit, ith_qubit + 1])
-
-        if num_qubits & 1: ### odd
-            for _ in range(num_steps):
-                for ith_qubit in range(num_qubits - 1):
-                    if not (ith_qubit & 1): ### even
-                        qc.append(gate_block_trotter(dt=dt,
-                                                    to_instruction=to_instruction,
-                                                    add_barrier=add_barrier),
-                                qargs = [ith_qubit, ith_qubit + 1])
-                for ith_qubit in range(num_qubits):
-                    if ith_qubit & 1: ### odd
-                        qc.append(gate_block_trotter(dt=dt,
-                                                    to_instruction=to_instruction,
-                                                    add_barrier=add_barrier), 
-                                qargs = [ith_qubit, ith_qubit + 1])
-                # if add_barrier:
-                #     qc.barrier([ith_qubit, ith_qubit + 1])
-
-        if add_barrier:
-            qc.barrier(str(ith_step+1)+"-th iteration")
-
-    return qc.to_instruction(label="path_conventional") if to_instruction else qc
-
-
-def gate_path_proposed(num_qubits: int,
-                       num_steps: int, ###! note that this is based on the counting of the original Trotter iteration
-                       dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
-                       type_H_eff: str = None,
-                       to_instruction: bool = True,
-                       add_barrier: bool = False,
-                      ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    Proposed Trotter block for 2\Delta t
-    """
-    assert not (num_steps & 1)
-    assert (num_qubits - 1) % 4 == 0
-
-    qc = QuantumCircuit(num_qubits,
-                        name="path_proposed")
-
-    for ith_step in range(num_steps // 2): ###! halved here: since gate_proposed_2t merges two original Trotter iterations
-        for ith_qubit in range(num_qubits - 2):
-            if ith_qubit % 4 == 0: ### even
-                if to_instruction:
-                    qc.append(gate_proposed_2t(dt=dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
-                                               type_H_eff=type_H_eff,
-                                               to_instruction=to_instruction,
-                                               add_barrier=add_barrier), 
-                              qargs=list(range(ith_qubit, ith_qubit + 5)))
-                else:
-                    qc.compose(gate_proposed_2t(dt=dt, ###! dt follows the same scale as the arXiv paper: 2505.04552
-                                                type_H_eff=type_H_eff,
-                                                to_instruction=to_instruction,
-                                                add_barrier=add_barrier),
-                               qubits=list(range(ith_qubit, ith_qubit + 5)),
-                               inplace=True,)
-        
-        if add_barrier:
-            qc.barrier(label=str(ith_step+1)+"-th iteration")
-
-    return qc.to_instruction(label="path_proposed") if to_instruction else qc
-
-
-def gate_initial_state(state_initial: str,
-                       endian_state_initial: str = "big",
-                       to_instruction: bool = True,
-                       add_barrier: bool = False,
-                      ) -> Union[QuantumCircuit, Instruction]:
-    """
-    The state_initial should be the string in big endian.
-
-    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
-    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
-
-    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
-    this is big endian to big endian, and little endian to little endian.
-    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
-    """
-    if endian_state_initial == "little":
-        state_initial = state_initial[::-1]
-
-    qc = QuantumCircuit(len(state_initial))
-    
-    for i, state in enumerate(state_initial):
-        if state == "1":
-            qc.x(i)
-
-    if add_barrier:
-        qc.barrier(label=state_initial)
-
-    return qc.to_instruction(label=state_initial) if to_instruction else qc
