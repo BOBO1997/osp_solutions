@@ -34,4 +34,3 @@ def gate_initial_state(state_initial: str,
         qc.barrier(label=state_initial)
 
     return qc.to_instruction(label=state_initial) if to_instruction else qc
-

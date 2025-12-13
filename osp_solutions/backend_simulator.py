@@ -3,9 +3,46 @@ import numpy as np
 import copy
 from qiskit.circuit import QuantumCircuit
 from qiskit_aer import AerSimulator
+from qiskit_aer.noise import NoiseModel, pauli_error, amplitude_damping_error
 # from qiskit_aer.primitives import SamplerV2 as AerSampler
 import qiskit.quantum_info as qi
 from qiskit.result import Counts, Result #! deprecated 
+
+# --- Pauli matrices ---
+
+matrix_I = np.array([[1, 0], 
+                     [0, 1]], 
+                    dtype="complex")
+matrix_X = np.array([[0, 1], 
+                     [1, 0]], 
+                    dtype="complex")
+matrix_Y = np.array([[0, -1j], 
+                     [1j, 0]], 
+                    dtype="complex")
+matrix_Z = np.array([[1, 0], 
+                     [0, -1]],
+                    dtype="complex")
+matrix_Zero = np.array([[1, 0], 
+                        [0, 0]],
+                       dtype="complex")
+matrix_One = np.array([[0, 0], 
+                       [0, 1]],
+                      dtype="complex")
+matrix_Plus = np.array([[1, 1], 
+                        [1, 1]],
+                       dtype="complex")
+matrix_Minus = np.array([[1, -1], 
+                         [-1, 1]],
+                        dtype="complex")
+matrix_H = np.array([[1, 1], 
+                     [1, -1]], 
+                    dtype="complex") / np.sqrt(2)
+matrix_S = np.array([[1, 0], 
+                     [0, 1j]], 
+                    dtype="complex")
+matrix_S_dagger = np.array([[1, 0], 
+                            [0, -1j]], 
+                           dtype="complex")
 
 
 class DMExtended(qi.DensityMatrix):
@@ -96,6 +133,7 @@ class DMExtended(qi.DensityMatrix):
 
 ### functions for converting quantum info to density matrice ###
 
+
 def qc_to_dm(qc: QuantumCircuit,
              noise_model: Any = None,
              endian_qc: str = "big",
@@ -128,13 +166,38 @@ def qc_to_dm(qc: QuantumCircuit,
         return DMExtended(dm)
 
 
-def str_pauli_to_dm(str_pauli: Union[str, qi.Pauli],
-                    endian_dm: str = "big",
-                    endian_pauli: str = "big",
+def str_state_to_dm(str_state: str,
+                    endian_str: str = "big",
+                    endian_dm: str = "little",
                    ) -> DMExtended:
     """
-    big endian by default
+    ###! maybe, using DensityMatrix.from_label is better
+    ###! qi.DensityMatrix.from_label is from a label string with big endian to a density matrix with little endian
 
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    # """
+    flag_reverse_endian = 1 if endian_str == endian_dm else -1
+    dm = 1
+    for ith_char in str_state[::flag_reverse_endian]:
+        if ith_char == "0":
+            dm = np.kron(dm, matrix_Zero)
+        elif ith_char == "1":
+            dm = np.kron(dm, matrix_One)
+        else:
+            raise Exception("please specify 0 or 1 only.")
+    return DMExtended(dm)
+
+
+def str_pauli_to_dm(str_pauli: Union[str, qi.Pauli],
+                    endian_pauli: str = "big",
+                    endian_dm: str = "little",
+                   ) -> DMExtended:
+    """
     big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
     little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
 
@@ -149,20 +212,19 @@ def str_pauli_to_dm(str_pauli: Union[str, qi.Pauli],
     ret = 1
     for char_pauli in str_pauli:
         if char_pauli == "I":
-            dm = np.array([[1, 0], [0, 1]], dtype="complex")
+            ret = np.kron(ret, matrix_I)
         elif char_pauli == "X":
-            dm = np.array([[0, 1], [1, 0]], dtype="complex")
+            ret = np.kron(ret, matrix_X)
         elif char_pauli == "Y":
-            dm = np.array([[0, -1j], [1j, 0]], dtype="complex")
+            ret = np.kron(ret, matrix_Y)
         elif char_pauli == "Z":
-            dm = np.array([[1, 0], [0, -1]], dtype="complex")
+            ret = np.kron(ret, matrix_Z)
         elif char_pauli == "0":
-            dm = np.array([[1, 0], [0, 0]], dtype="complex")
+            ret = np.kron(ret, matrix_Zero)
         elif char_pauli == "1":
-            dm = np.array([[0, 0], [0, 1]], dtype="complex")
+            ret = np.kron(ret, matrix_One)
         else:
             Exception
-        ret = np.kron(ret, dm)
     return DMExtended(ret)
 
 
@@ -184,21 +246,16 @@ def str_pauli_to_dm_opr_meas(str_pauli: Union[str, qi.Pauli],
        (endian_dm[:6] == "big" and endian_pauli[:3] == "little"):
         str_pauli = str_pauli[::-1]
 
-    dm_I = np.array([[1, 0], [0, 1]], dtype="complex")
-    dm_H = np.array([[1, 1], [1, -1]], dtype="complex") / np.sqrt(2)
-    dm_S = np.array([[1, 0], [0, 1j]], dtype="complex")
-    dm_S_dagger = np.array([[1, 0], [0, -1j]], dtype="complex")
-
     ret = 1
     for char_pauli in str_pauli:
         if char_pauli == "I":
-            dm = dm_I
+            dm = matrix_I
         elif char_pauli == "X":
-            dm = dm_H
+            dm = matrix_H
         elif char_pauli == "Y":
-            dm = dm_H @ dm_S_dagger
+            dm = matrix_H @ matrix_S_dagger
         elif char_pauli == "Z":
-            dm = dm_I
+            dm = matrix_I
         else:
             Exception
         ret = np.kron(ret, dm)
@@ -235,6 +292,7 @@ def hamiltonian_to_dm(hamiltonian: dict,
 
 ### functions for density matrices to measurement results ###
 
+
 def dm_to_expval(dm: qi.DensityMatrix, 
                  str_observable: str,
                  endian_dm: str = "big",
@@ -260,35 +318,17 @@ def dm_to_expval(dm: qi.DensityMatrix,
     dm_observable = 1
     for char_pauli in str_observable:
         if char_pauli == "I":
-            dm_observable = np.kron(dm_observable, 
-                                    np.array([[1, 0],
-                                              [0, 1]],
-                                    dtype="complex"))
+            dm_observable = np.kron(dm_observable, matrix_I)
         elif char_pauli == "X":
-            dm_observable = np.kron(dm_observable, 
-                                    np.array([[0, 1],
-                                              [1, 0]],      
-                                    dtype="complex"))
+            dm_observable = np.kron(dm_observable, matrix_X)
         elif char_pauli == "Y":
-            dm_observable = np.kron(dm_observable, 
-                                    np.array([[0, -1j],
-                                              [1j, 0]],
-                                    dtype="complex"))
+            dm_observable = np.kron(dm_observable, matrix_Y)
         elif char_pauli == "Z":
-            dm_observable = np.kron(dm_observable, 
-                                    np.array([[1, 0],
-                                              [0, -1]],
-                                    dtype="complex"))
+            dm_observable = np.kron(dm_observable, matrix_Z)
         elif char_pauli == "0":
-            dm_observable = np.kron(dm_observable, 
-                                    np.array([[1, 0],
-                                              [0, 0]],
-                                    dtype="complex"))
+            dm_observable = np.kron(dm_observable, matrix_Zero)
         elif char_pauli == "1":
-            dm_observable = np.kron(dm_observable, 
-                                    np.array([[0, 0],
-                                              [0, 1]],
-                                    dtype="complex"))
+            dm_observable = np.kron(dm_observable, matrix_One)
         else:
             raise Exception(char_pauli)
     dm = dm @ dm_observable
@@ -343,6 +383,7 @@ def dms_to_hists(dms: List[qi.DensityMatrix],
                  endian_hist: str = "little",
                 ) -> List[Counts]:
     """
+    ###! using dms_with_observables_to_hists is recommended.
     Here observables just indicate which qubits to measure.
     It takes care of only whether the char_pauli is I or not.
 
@@ -453,3 +494,168 @@ def result_to_dms(result: Result,
         else:
             dms.append(dm)
     return dms
+
+
+def make_dm_binary(str_binary: str,
+                   endian_binary: str = "big",
+                   endian_dm: str = "little",
+                  ) -> np.ndarray:
+    """
+    str_binary: big endian
+    output: little endian
+
+    big endian:    q_0 = X, q_1 = Y, q_2 = Z -> q_0 q_1 q_2 = "XYZ", i.e. X \otimes Y \otimes Z
+    little endian: q_0 = X, q_1 = Y, q_2 = Z -> q_2 q_1 q_0 = "ZYX", i.e. Z \otimes Y \otimes X
+
+    That is, if one runs `for i, state in enumerate(some_str)` and apply `some_str[0] \otimes some_str[1] \otimes ...`,
+    this is big endian to big endian, and little endian to little endian.
+    Note that the QuantumCircuit instance adopts the list of qubit indices (q_0, q_1, ...) in a big endian style.
+    """
+    flag_reverse_endian = 1 if endian_binary == endian_dm else -1
+    str_binary = str_binary[::flag_reverse_endian]
+    dm = 1 # matrix_Zero if str_binary[0] == "0" else matrix_One
+    for char_binary in str_binary:
+        if char_binary == "0":
+            dm = np.kron(dm, matrix_Zero)
+        elif char_binary == "1":
+            dm = np.kron(dm, matrix_One)
+        else:
+            raise Exception
+    return dm
+
+
+def compute_distance_trace_unitary_mod_phase(U, V):
+    # remove global phase
+    c = np.trace(U.conj().T @ V)
+    theta = np.angle(c)
+    V_phase = np.exp(-1j * theta) * V
+
+    # trace norm ||U - V_phase||_1 = sum(singular values)
+    diff = U - V_phase
+    s = np.linalg.svd(diff, compute_uv=False)
+    return 0.5 * np.sum(s)
+
+
+### ========================================================== ###
+
+
+# --- 1-qubit depolarizing channel (maximally mixed at p=1) ---
+def kraus_depolarizing_1q(p: float) -> qi.Kraus:
+    r"""
+    1-qubit depolarizing (isotropic) channel:
+        E_p(ρ) = (1 - p) ρ + p * I/2
+    p=1 → E_1(ρ) = I/2 (maximally mixed)
+    Kraus operators:
+        K0 = sqrt(a) I,  Ki = sqrt(b) P_i (P ∈ {X,Y,Z})
+        a = 1 - 3p/4,  b = p/4
+    """
+    if not (0.0 <= p <= 1.0):
+        raise ValueError("p must be in [0, 1].")
+    a = 1 - 3 * p / 4
+    b = p / 4
+    Ks = [
+        np.sqrt(a) * matrix_I,
+        np.sqrt(b) * matrix_X,
+        np.sqrt(b) * matrix_Y,
+        np.sqrt(b) * matrix_Z,
+    ]
+    return qi.Kraus(Ks)
+
+
+# --- Utility ---
+def kron(*ops):
+    """Kronecker product of multiple matrices."""
+    out = np.array([[1]], dtype="complex")
+    for op in ops:
+        out = np.kron(out, op)
+    return out
+
+
+def two_qubit_paulis():
+    """List of 16 two-qubit Pauli operators [II, IX, IY, ..., ZZ]."""
+    singles = [matrix_I, matrix_X, matrix_Y, matrix_Z]
+    return [kron(a, b) for a in singles for b in singles]
+
+
+# --- 2-qubit depolarizing channel (maximally mixed at p=1) ---
+def kraus_depolarizing_2q(p: float) -> qi.Kraus:
+    r"""
+    2-qubit depolarizing (isotropic) channel:
+        E_p(p) = (1 - p) p + p * I/4
+    p=1 → E_1(p) = I/4 (maximally mixed)
+    Kraus operators:
+        K0 = sqrt(a) II,  Ki = sqrt(b) P_i (P ∈ 15 nontrivial two-qubit Paulis)
+        a = 1 - 15p/16,  b = p/16
+    """
+    if not (0.0 <= p <= 1.0):
+        raise ValueError("p must be in [0, 1].")
+    dim = 4
+    a = 1 - (dim ** 2 - 1) * p / (dim ** 2)  # = 1 - 15p/16
+    b = p / (dim ** 2)                   # = p/16
+    P2 = two_qubit_paulis()
+    Ks = [np.sqrt(a) * P2[0]]  # II
+    Ks += [np.sqrt(b) * P for P in P2[1:]]  # 15 nontrivial Paulis
+    return qi.Kraus(Ks)
+
+
+### ========================================================== ###
+
+
+simulator_ideal = AerSimulator(method="density_matrix")
+
+
+def make_simulator_deplarising(p_dep1: float,
+                               p_dep2: float,
+                              ) -> AerSimulator:
+    error_dep1 = pauli_error([("I", 1 - 3 * p_dep1 / 4), ("X", p_dep1 / 4), ("Y", p_dep1 / 4), ("Z", p_dep1 / 4)])
+
+    # error_dep2_local = error_dep1.tensor(error_dep1)
+    error_dep2_global = pauli_error([("II", 1 - 15 * p_dep2 / 16), ("IX", p_dep2 / 16), ("IY", p_dep2 / 16), ("IZ", p_dep2 / 16),
+                                     ("XI", p_dep2 / 16), ("XX", p_dep2 / 16), ("XY", p_dep2 / 16), ("XZ", p_dep2 / 16),
+                                     ("YI", p_dep2 / 16), ("YX", p_dep2 / 16), ("YY", p_dep2 / 16), ("YZ", p_dep2 / 16),
+                                     ("ZI", p_dep2 / 16), ("ZX", p_dep2 / 16), ("ZY", p_dep2 / 16), ("ZZ", p_dep2 / 16)])
+
+    # Add errors to noise model
+    noise_model = NoiseModel()
+    noise_model.add_all_qubit_quantum_error(error_dep1, ["rx", "rz", "sx", "h", "sdg", "s", "x", "u1", "u2", "u3"])
+    noise_model.add_all_qubit_quantum_error(error_dep2_global, ["cx", "cz"])
+    # noise_model.add_all_qubit_quantum_error(error_3, ["cswap", "ccx"])
+
+    # Create noisy simulator backend
+    simulator_noisy = AerSimulator(method="density_matrix",
+                                   noise_model=noise_model)
+    # simulator_ideal = AerSimulator(method="density_matrix")
+
+    return simulator_noisy
+
+
+def make_simulator_amplitude_damping(p_amp1: float,
+                                     p_amp2: float,
+                                    ) -> AerSimulator:
+    """
+    Add errors to noise model
+    T1 = 25.0
+    gate_time = 0.1
+    param_amp = 1 - np.exp(-gate_time / T1)
+    0.003992010656008516
+    """
+
+    p_amp1 = 1.0 * 1e-4
+    p_amp2 = 1.0 * 1e-3
+
+    error_amp1 = amplitude_damping_error(param_amp=p_amp1)
+    error_amp2 = amplitude_damping_error(param_amp=p_amp2).tensor(amplitude_damping_error(param_amp=p_amp2))
+
+    noise_model = NoiseModel()
+    noise_model.add_all_qubit_quantum_error(error_amp1, ["rx", "rz", "sx", "h", "sdg", "s", "x", "u1", "u2", "u3"])
+    noise_model.add_all_qubit_quantum_error(error_amp2, ["cz", "cx"])
+    # noise_model.add_all_qubit_quantum_error(error_3, ["cswap", "ccx"])
+    print(noise_model)
+    print()
+
+    # Create noisy simulator backend
+    simulator_noisy = AerSimulator(method="density_matrix",
+                                noise_model=noise_model)
+    # simulator_ideal = AerSimulator(method="density_matrix")
+
+    return simulator_noisy

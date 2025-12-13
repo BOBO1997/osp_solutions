@@ -5,7 +5,7 @@ import numpy as np
 import qiskit.quantum_info as qi
 
 import networkx as nx
-from osp_solutions.simulator_dm import hamiltonian_to_dm
+from osp_solutions.backend_simulator import hamiltonian_to_dm
 
 class Hamiltonian(Mapping):
     def __init__(self, arg_dict: Dict[str, complex]):

@@ -67,9 +67,9 @@ def gate_block_trotter_6cnot(dt: float,
 
     qc = QuantumCircuit(2,
                         name="block_trotter_6cnot")
-    qc.append(instruction=qc_ZZ.to_instruction(), qargs=[0,1])
-    qc.append(instruction=qc_YY.to_instruction(), qargs=[0,1])
-    qc.append(instruction=qc_XX.to_instruction(), qargs=[0,1])
+    qc.compose(instruction=qc_ZZ.to_instruction(), qubits=[0,1], inplace=True)
+    qc.compose(instruction=qc_YY.to_instruction(), qubits=[0,1], inplace=True)
+    qc.compose(instruction=qc_XX.to_instruction(), qubits=[0,1], inplace=True)
 
     if add_barrier:
         qc.barrier(label="block_trotter_6cnot")
@@ -307,10 +307,10 @@ def gate_2xx_zz(dt: float,
     return qc.to_instruction(label="2xx_zz") if to_instruction else qc
 
 
-def gate_H_eff(dt: float,
-               to_instruction: bool = True,
-               add_barrier: bool = False,
-              ) -> Union[QuantumCircuit, Instruction]:
+def gate_H_eff_nnn(dt: float,
+                   to_instruction: bool = True,
+                   add_barrier: bool = False,
+                  ) -> Union[QuantumCircuit, Instruction]:
     """
     dt: qiskit._accelerate.circuit.Parameter
     Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
@@ -333,17 +333,11 @@ def gate_H_eff(dt: float,
     # if add_barrier:
     #     qc.barrier()
     
-    if to_instruction:
-        qc.append(gate_2xx_zz(dt=dt,
-                              to_instruction=to_instruction,
-                              add_barrier=add_barrier),
-                  qargs=[0, 1])
-    else:
-        qc.compose(gate_2xx_zz(dt=dt,
-                               to_instruction=to_instruction,
-                               add_barrier=add_barrier),
-                   qubits=[0, 1],
-                   inplace=True,)
+    qc.compose(gate_2xx_zz(dt=dt,
+                            to_instruction=to_instruction,
+                            add_barrier=add_barrier),
+                qubits=[0, 1],
+                inplace=True,)
     
     qc.sx(0) ### sqrt(X)
     qc.sx(1) ### sqrt(X)
@@ -362,159 +356,30 @@ def gate_H_eff(dt: float,
     return qc.to_instruction(label="H_eff") if to_instruction else qc
 
 
-### ================================================== ###
-
-
-def gate_H_eff_old(dt,
-                   to_instruction: bool = True,
-                   add_barrier: bool = False,
-                  ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
-    """
-
-    qc = QuantumCircuit(2)
-
-    qc.rx(2 * dt, 0)
-    qc.rz(2 * dt, 1)
-    qc.h(1)
-
-    qc.cx(1, 0)
-
-    qc.rz(- 2 * dt, 0)
-    qc.rx(- 2 * dt, 1)
-    qc.rz(2 * dt, 1)
-
-    qc.cx(1, 0)
-
-    qc.rz(2 * dt, 0)
-    qc.h(1)
-
+def gate_block_trotter_triangle_nnn(dt: float,
+                                    connectivity: str = "complete",
+                                    to_instruction: bool = True,
+                                    add_barrier: bool = False,
+                                   ) -> Union[QuantumCircuit, Instruction]:
+    qc = QuantumCircuit(3,
+                        name="block_trotter_triangle")
+    qc.compose(gate_U_enc(connectivity=connectivity,
+                            to_instruction=to_instruction,
+                            add_barrier=add_barrier),
+                qubits=[jth_qubit for jth_qubit in range(0, 3)],
+                inplace=True,)
+    qc.compose(gate_H_eff_nnn(dt=dt,
+                            to_instruction=to_instruction,
+                            add_barrier=add_barrier),
+                qubits=[jth_qubit for jth_qubit in range(0, 2)],
+                inplace=True,)
+    qc.compose(gate_U_dec(connectivity=connectivity,
+                            to_instruction=to_instruction,
+                            add_barrier=add_barrier),
+                qubits=[jth_qubit for jth_qubit in range(0, 3)],
+                inplace=True,)
     if add_barrier:
-        qc.barrier()
+        qc.barrier(label="block_trotter_triangle")
 
-    return qc.to_instruction(label="H_eff_old") if to_instruction else qc
-
-
-def gate_H_eff_new(dt,
-                   to_instruction: bool = True,
-                   add_barrier: bool = False,
-                  ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter
-    Create and return the circuit instruction of the one trotter step with rotation angle `dt`.
-    """
-
-    qc = QuantumCircuit(2)
-
-    qc.ry(- np.pi / 4, 0)
-    qc.ry(- np.pi / 4, 1)
-
-    qc.rz(np.sqrt(2) * dt, 0)
-    qc.rz(np.sqrt(2) * dt, 1)
-
-    qc.cx(1, 0)
-
-    qc.rz(- 2 * dt, 0)
-    qc.rx(2 * dt, 1)
-
-    qc.cx(1, 0)
-
-    qc.rz(np.sqrt(2) * dt, 0)
-    qc.rz(np.sqrt(2) * dt, 1)
-
-    qc.ry(np.pi / 4, 0)
-    qc.ry(np.pi / 4, 1)
-
-    if add_barrier:
-        qc.barrier()
-
-    return qc.to_instruction(label="H_eff_new") if to_instruction else qc
-
-
-def gate_proposed_2t(dt, ###! dt follows the same scale as the arXiv paper
-                     type_H_eff: str = None,
-                     to_instruction: bool = True,
-                     add_barrier: bool = False,
-                    ) -> Union[QuantumCircuit, Instruction]:
-    """
-    dt: qiskit._accelerate.circuit.Parameter, this corresponds to Delta t' in the arXiv paper: 2505.04552
-    
-    """
-
-    if type_H_eff == "new":
-        gate_H_eff = gate_H_eff_new
-    elif type_H_eff == "old":
-        gate_H_eff = gate_H_eff_old
-    else:
-        raise Exception("specify new or old")
-
-    qc = QuantumCircuit(5)
-
-    if to_instruction:
-        qc.append(gate_block_trotter_3cnot(dt=dt, #! * 2, ###!
-                                           option="a", # "d",
-                                           to_instruction=to_instruction,
-                                           add_barrier=add_barrier),
-                  qargs=[3, 4])
-    else:
-        qc.compose(gate_block_trotter_3cnot(dt=dt, #! * 2, ###!
-                                            option="a", # "d",
-                                            to_instruction=to_instruction,
-                                            add_barrier=add_barrier), 
-                   qubits=[3, 4],
-                   inplace=True,)
-        
-    if add_barrier:
-        qc.barrier()
-
-    qc.cx(1, 2)
-    qc.cx(2, 3)
-    qc.cx(3, 1)
-
-    if add_barrier:
-        qc.barrier()
-
-    if to_instruction:
-        qc.append(gate_H_eff(dt=dt, # (1 + lmd) * dt,
-                             to_instruction=to_instruction,
-                             add_barrier=add_barrier,
-                            ),
-                qargs=[1, 2],
-                )
-    else:
-        qc.compose(gate_H_eff(dt=dt, # (1 + lmd) * dt,
-                              to_instruction=to_instruction,
-                              add_barrier=add_barrier,
-                             ),
-                   qubits=[1, 2],
-                   inplace=True,
-                  )
-
-    qc.cx(3, 1)
-    qc.cx(2, 3)
-    qc.cx(1, 2)
-
-    if add_barrier:
-        qc.barrier()
-
-    if to_instruction:
-        qc.append(gate_block_trotter_3cnot(dt=dt, #! * 2, ###!
-                                           option="a", # "c",
-                                           to_instruction=to_instruction,
-                                           add_barrier=add_barrier), 
-                  qargs=[0, 1])
-    else:
-        qc.compose(gate_block_trotter_3cnot(dt=dt, #! * 2, ### !
-                                            option="a", # "c",
-                                            to_instruction=to_instruction,
-                                            add_barrier=add_barrier), 
-                   qubits=[0, 1],
-                   inplace=True,)
-        
-    if add_barrier:
-        qc.barrier()
-
-    return qc.to_instruction(label="proposed_2t") if to_instruction else qc
+    return qc.to_instruction(label="block_trotter_triangle") if to_instruction else qc
 
