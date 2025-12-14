@@ -42,7 +42,7 @@ Please use the following bibtex data for the citation.
   url = {https://arxiv.org/abs/2505.04552},
   author = {Yang,  Bo and Negishi,  Naoki},
   keywords = {Quantum Physics (quant-ph),  FOS: Physical sciences,  FOS: Physical sciences},
-  title = {Symmetry-Aware Trotterization for Simulating the Heisenberg Model on IBM Quantum Devices},
+  title = {Quantum simulation of many-body dynamics with noise-robust Trotter decomposition based on symmetric structures},
   publisher = {arXiv},
   year = {2025},
   copyright = {Creative Commons Attribution 4.0 International}
