@@ -58,6 +58,25 @@ plt.legend([p1,
             "proposed"])
 plt.savefig(fname=filename_self+"_step_to_infidelity_log.png")
 
+plt.clf()
+plt.figure(dpi=200)
+p1 = plt.scatter(nums_steps_conventional, 1 - np.array(fidelities_conventional), marker="o")
+plt.plot(nums_steps_conventional, 1 - np.array(fidelities_conventional),linewidth=1, linestyle='dotted')
+p3 = plt.scatter(nums_steps_triangle / 2 * 7/6, 1 - np.array(fidelities_triangle_parallel), marker="x")
+plt.plot(nums_steps_triangle / 2 * 7/6, 1 - np.array(fidelities_triangle_parallel),linewidth=1, linestyle='dashdot')
+plt.xlabel(r"$n, \frac{m}{2}$")
+plt.ylabel("state infidelity")
+# plt.grid(visible=True,which="minor")
+plt.yscale("log")
+# plt.yticks([1e-1,3*1e-1,4*1e-1,6*1e-1,8*1e-1,1e-0],
+#            [r"$10^{-1}$",r"$2\times10^{-1}$",r"$4\times10^{-1}$",r"$6\times10^{-1}$",r"$8\times10^{-1}$",r"$10^{0}$"],
+#            minor=True)
+plt.legend([p1,  
+            p3],
+           ["conventional",
+            "proposed"])
+plt.savefig(fname=filename_self+"_step_to_infidelity_log_7_over_6.png")
+
 
 plt.clf()
 plt.figure(dpi=200)

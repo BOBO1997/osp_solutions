@@ -13,9 +13,9 @@ from qiskit.compiler import transpile
 from qiskit.transpiler.passes import RemoveBarriers
 import qiskit.quantum_info as qi
 
-from kagome_trotter.circuits_1d_path import gate_path_conventional, gate_path_triangle_parallel
-from kagome_trotter.backend_simulator import compute_distance_trace_unitary_mod_phase
-from kagome_trotter.hamiltonian import make_H_Heisenberg_path
+from osp_solutions.circuits_1d_path import gate_path_conventional, gate_path_triangle_parallel
+from osp_solutions.backend_simulator import compute_distance_trace_unitary_mod_phase
+from osp_solutions.hamiltonian import make_H_Heisenberg_path
 
 
 filename_self = os.path.basename(__file__).split(".")[0]

@@ -20,7 +20,7 @@ type_H_eff_triangle = "new"
 
 ### ====== noise model ====== ###
 
-from kagome_trotter.backend_simulator import make_simulator_deplarising, simulator_ideal
+from osp_solutions.backend_simulator import make_simulator_deplarising, simulator_ideal
 
 simulator_ideal = simulator_ideal
 simulator_noisy = make_simulator_deplarising(p_dep1=p_dep1,
